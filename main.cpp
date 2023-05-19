@@ -191,57 +191,104 @@ int findYCoordinateLimit(std::vector<Vec2i> &pts1, std::vector<Vec2i> &pts2, int
 	return pts1[pts1Size - 1].y;
 }
 
-void triangle(Vec2i t0, Vec2i t1, Vec2i t2, TGAImage &image, TGAColor color) { 
+bool isPointInsideTriangle(Vec2i vertices[], Vec2i point)
+{
+	// Need error handling to ensure we have at most 3 vertices
+	// if (vertices != 3) return false;
+
+	double baryCenter1Numerator = ((vertices[1].y - vertices[2].y) * (point.x - vertices[2].x)) + ((vertices[2].x - vertices[1].x)*(point.y - vertices[2].y));
+	double denominator = ((vertices[1].y - vertices[2].y) * (vertices[0].x - vertices[2].x)) + ((vertices[2].x - vertices[1].x)*(vertices[0].y - vertices[2].y));
+	
+	float baryCenter1 = baryCenter1Numerator / denominator;
+	bool bary1InsideTriangle = baryCenter1 <= 1 && baryCenter1 >= 0;
+
+	double baryCenter2Numerator = ((vertices[2].y - vertices[0].y)*(point.x - vertices[2].x)) + ((vertices[0].x - vertices[2].x)*(point.y - vertices[2].y));
+	float baryCenter2 = baryCenter2Numerator / denominator;
+	bool bary2InsideTriangle = baryCenter2 <= 1 && baryCenter2 >= 0;
+
+	// std::cout << baryCenter1 << " " << baryCenter2 << " " << 1 - baryCenter1 - baryCenter2 << std::endl;
+	float baryCenter3 = 1 - baryCenter1 - baryCenter2;
+	bool bary3InsideTriangle = baryCenter3 <= 1 && baryCenter3 >= 0;
+
+	// std::cout << point << 1 - baryCenter1 - baryCenter2 << std::endl;
+	return bary1InsideTriangle && bary2InsideTriangle && bary3InsideTriangle ? true : false;
+}
+
+void barycentricPolygonRenderer(int width, int height, Vec2i vertices[], TGAImage &image, TGAColor color)
+{
+	for (int x = 0; x <= width; x++)
+	{
+		for (int y = 0; y <= height; y++)
+		{
+			if (isPointInsideTriangle(vertices, Vec2i(x, y)) == true)
+			{
+				image.set(x,y,color);
+			}
+		}
+	}
+}
+
+void triangle(Vec2i t0, Vec2i t1, Vec2i t2, TGAImage &image, TGAColor color, bool useAA = false) { 
 	// sorted by y-coordinate: {(10,70), (70, 80), (50, 160)}
 	// TODO: we need to handle the direction (CW or CCW) and be able to render it the same
 	// But first let's handle this case and then do the other case after
 
-	line(t0.x, t0.y, t2.x, t2.y, image, color, 1);
-	line(t0.x, t0.y, t1.x, t1.y, image, color, 2);
-	line(t1.x, t1.y, t2.x, t2.y, image, color, 3);
-
-	int yCoordinateLimit;
-	int line1PtsSize = line1Pts.size();
-	int line2PtsSize = line2Pts.size();
-
-	yCoordinateLimit = findYCoordinateLimit(line1Pts, line2Pts, line1PtsSize, line2PtsSize);
-	int inc = 0;
-
-	// Can we have two separate loops storing the unique points and then use the other loop to find the y coordinates that match
-	// In order to do this we need to figure out which line has the steeper slope
-	// The line with the steeper slope will obviously hit the limit faster
-
-	// we don't need to find the steeper slope, in the line function above, I simply take all Vec2i where the y values are unique
-
-	// TODO: this could be extracted
-	if (line1Pts[line1PtsSize - 1].y == yCoordinateLimit)
-	{
-		while (line1Pts[inc].y < yCoordinateLimit) 
-		{
-			line(line1Pts[inc].x, line1Pts[inc].y, line2Pts[inc].x, line2Pts[inc].y, image, color);
-			inc++;
-		}
-	} else {
-		while (line2Pts[inc].y < yCoordinateLimit)
-		{
-			line(line1Pts[inc].x, line1Pts[inc].y, line2Pts[inc].x, line2Pts[inc].y, image, color);
-			inc++;
-		}
+	// This will be very inefficient, but so be it
+	if (useAA) {
+		xiaolinAntiAliasing(t0.x, t0.y, t2.x, t2.y, image, color);
+		xiaolinAntiAliasing(t0.x, t0.y, t1.x, t1.y, image, color);
+		xiaolinAntiAliasing(t1.x, t1.y, t2.x, t2.y, image, color);
 	}
 
-	// we now need to draw horizontal lines between lines1Pts and lines3Pts
 
-	int incLine3 = 0;
-	while (line1Pts[inc].y < t2.y) // t2.y is the top point of the triangle so we can just use that
-	{
-		line(line1Pts[inc].x, line1Pts[inc].y, line3Pts[incLine3].x, line3Pts[incLine3].y, image, color);
-		inc++;
-		incLine3++;
-	}
+	// line(t0.x, t0.y, t2.x, t2.y, image, color, 1);
+	// line(t0.x, t0.y, t1.x, t1.y, image, color, 2);
+	// line(t1.x, t1.y, t2.x, t2.y, image, color, 3);
 
-	line1Pts.clear();
-	line2Pts.clear();
-	line3Pts.clear();
+	// int yCoordinateLimit;
+	// int line1PtsSize = line1Pts.size();
+	// int line2PtsSize = line2Pts.size();
+
+	// yCoordinateLimit = findYCoordinateLimit(line1Pts, line2Pts, line1PtsSize, line2PtsSize);
+	// int inc = 0;
+
+	// // Can we have two separate loops storing the unique points and then use the other loop to find the y coordinates that match
+	// // In order to do this we need to figure out which line has the steeper slope
+	// // The line with the steeper slope will obviously hit the limit faster
+
+	// // we don't need to find the steeper slope, in the line function above, I simply take all Vec2i where the y values are unique
+
+	// // TODO: this could be extracted
+	// if (line1Pts[line1PtsSize - 1].y == yCoordinateLimit)
+	// {
+	// 	while (line1Pts[inc].y < yCoordinateLimit) 
+	// 	{
+	// 		// The reason we see no AA is because scanline rendering just draws horizontal lines
+	// 		// You need to apply xiaolin AA on the outlines FIRST
+	// 		line(line1Pts[inc].x, line1Pts[inc].y, line2Pts[inc].x, line2Pts[inc].y, image, color);
+	// 		inc++;
+	// 	}
+	// } else {
+	// 	while (line2Pts[inc].y < yCoordinateLimit)
+	// 	{
+	// 		line(line1Pts[inc].x, line1Pts[inc].y, line2Pts[inc].x, line2Pts[inc].y, image, color);
+	// 		inc++;
+	// 	}
+	// }
+
+	// // we now need to draw horizontal lines between lines1Pts and lines3Pts
+
+	// int incLine3 = 0;
+	// while (line1Pts[inc].y < t2.y) // t2.y is the top point of the triangle so we can just use that
+	// {
+	// 	line(line1Pts[inc].x, line1Pts[inc].y, line3Pts[incLine3].x, line3Pts[incLine3].y, image, color);
+	// 	inc++;
+	// 	incLine3++;
+	// }
+
+	// line1Pts.clear();
+	// line2Pts.clear();
+	// line3Pts.clear();
 
 	// Great job this works! However this only handles scenarios where the lowest y coordinate is on the left
 	// We need to handle the scenario where it is on the right
@@ -263,15 +310,24 @@ int main(int argc, char** argv) {
 	// line(10,70,50,160,triangleImage, red);
 	// line(70,80,50,160,triangleImage, red);
 
-	Vec2i t0[3] = {Vec2i(10, 70),   Vec2i(70, 80), Vec2i(50, 160)}; 
-	triangle(t0[0], t0[1], t0[2], triangleImage, red);
+	Vec2i t0[3] = {Vec2i(50, 160), Vec2i(70, 80), Vec2i(10, 70)}; 
+	// isPointInsideTriangle(t0, Vec2i(1,1));
+	// isPointInsideTriangle(t0, Vec2i(40,100));
+	// isPointInsideTriangle(t0, Vec2i(200,200));
+
+	// triangle(t0[0], t0[1], t0[2], triangleImage, red);
+	barycentricPolygonRenderer(200,200, t0, triangleImage, red);
 
 	Vec2i t1[3] = {Vec2i(150, 1),  Vec2i(180, 50), Vec2i(70, 180)};
-	triangle(t1[0], t1[1], t1[2], triangleImage, white);
+	// triangle(t1[0], t1[1], t1[2], triangleImage, white);
+	barycentricPolygonRenderer(200,200, t1, triangleImage, white);
+
 	// sorted by y-coordinate: {(150,1), (180, 50), (70, 180)}
 
 	Vec2i t2[3] = {Vec2i(180, 150), Vec2i(120, 160), Vec2i(130, 180)}; 
-	triangle(t2[0], t2[1], t2[2], triangleImage, green);
+	triangle(t2[0], t2[1], t2[2], triangleImage, green, true);
+
+	// barycentricPolygonRenderer(200,200, t2, triangleImage, green);
 	// already sorted
 	
 	
