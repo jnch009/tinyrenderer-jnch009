@@ -42,11 +42,17 @@ bool isPointInsideTriangle(Vec2i vertices[], Vec2i point)
 	return bary1InsideTriangle && bary2InsideTriangle && bary3InsideTriangle ? true : false;
 }
 
-void barycentricPolygonRenderer(int width, int height, Vec2i vertices[], TGAImage &image, TGAColor color)
+void barycentricPolygonRenderer(Vec2i vertices[], TGAImage &image, TGAColor color)
 {
-	for (int x = 0; x <= width; x++)
+	int smallestX = std::min(vertices[0].x, std::min(vertices[1].x, vertices[2].x));
+	int maxWidth = std::max(abs(smallestX - vertices[0].x), std::max(abs(smallestX - vertices[1].x), abs(smallestX - vertices[2].x)));
+
+	int smallestY = std::min(vertices[0].y, std::min(vertices[1].y, vertices[2].y));
+	int maxHeight = std::max(abs(smallestY - vertices[0].y), std::max(abs(smallestY - vertices[1].y), abs(smallestY - vertices[2].y)));
+
+	for (int x = smallestX; x <= (smallestX + maxWidth); x++)
 	{
-		for (int y = 0; y <= height; y++)
+		for (int y = smallestY; y <= (smallestY + maxHeight); y++)
 		{
 			if (isPointInsideTriangle(vertices, Vec2i(x, y)) == true)
 			{
@@ -144,17 +150,17 @@ int main(int argc, char** argv) {
 
 	Vec2i t0[3] = {Vec2i(10, 70), Vec2i(70, 80), Vec2i(50, 160)};
 	triangle(t0[0], t0[1], t0[2], triangleImage, red, false);
-	barycentricPolygonRenderer(200,200, t0, barytriangleImage, red);
+	barycentricPolygonRenderer(t0, barytriangleImage, red);
 
 	Vec2i t1[3] = {Vec2i(150, 1),  Vec2i(180, 50), Vec2i(70, 180)};
 	triangle(t1[0], t1[1], t1[2], triangleImage, white, false);
-	barycentricPolygonRenderer(200,200, t1, barytriangleImage, white);
+	barycentricPolygonRenderer(t1, barytriangleImage, white);
 
 	// sorted by y-coordinate: {(150,1), (180, 50), (70, 180)}
 
 	Vec2i t2[3] = {Vec2i(180, 150), Vec2i(120, 160), Vec2i(130, 180)}; 
 	triangle(t2[0], t2[1], t2[2], triangleImage, green, false);
-	barycentricPolygonRenderer(200,200, t2, barytriangleImage, green);
+	barycentricPolygonRenderer(t2, barytriangleImage, green);
 
 	// already sorted, this might not always be the case however
 
@@ -228,7 +234,7 @@ int main(int argc, char** argv) {
         	Vec3f world_coords = model->vert(face[j]); 
         	screen_coords[j] = Vec2i((world_coords.x+1.)*width/2., (world_coords.y+1.)*height/2.); 
     	} 
-    	triangle(screen_coords[0], screen_coords[1], screen_coords[2], flatShadingRandom, TGAColor(rand()%255, rand()%255, rand()%255, 255)); 
+    	barycentricPolygonRenderer(screen_coords, flatShadingRandom, TGAColor(rand()%255, rand()%255, rand()%255, 255)); 
 	}
 
 	flatShadingRandom.flip_vertically();
