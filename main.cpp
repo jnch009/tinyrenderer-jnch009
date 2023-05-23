@@ -57,6 +57,10 @@ void barycentricPolygonRenderer(int width, int height, Vec2i vertices[], TGAImag
 }
 
 void triangle(Vec2i t0, Vec2i t1, Vec2i t2, TGAImage &image, TGAColor color, bool useAA = false) { 
+	std::vector<Vec2i> line1Pts;
+	std::vector<Vec2i> line2Pts;
+	std::vector<Vec2i> line3Pts;
+	
 	// sorted by y-coordinate: {(10,70), (70, 80), (50, 160)}
 	// TODO: we need to handle the direction (CW or CCW) and be able to render it the same
 	// But first let's handle this case and then do the other case after
@@ -68,59 +72,54 @@ void triangle(Vec2i t0, Vec2i t1, Vec2i t2, TGAImage &image, TGAColor color, boo
 		Line::xiaolinAntiAliasing(t1.x, t1.y, t2.x, t2.y, image, color);
 	}
 
-	std::vector<Vec2i> line1Pts;
-	std::vector<Vec2i> line2Pts;
-	std::vector<Vec2i> line3Pts;
+	Line::DDA(t0.x, t0.y, t2.x, t2.y, image, color, line1Pts);
+	Line::DDA(t0.x, t0.y, t1.x, t1.y, image, color, line2Pts);
+	Line::DDA(t1.x, t1.y, t2.x, t2.y, image, color, line3Pts);
 
+	int yCoordinateLimit;
+	int line1PtsSize = line1Pts.size();
+	int line2PtsSize = line2Pts.size();
 
-	// line(t0.x, t0.y, t2.x, t2.y, image, color, 1);
-	// line(t0.x, t0.y, t1.x, t1.y, image, color, 2);
-	// line(t1.x, t1.y, t2.x, t2.y, image, color, 3);
+	yCoordinateLimit = findYCoordinateLimit(line1Pts, line2Pts, line1PtsSize, line2PtsSize);
+	int inc = 0;
 
-	// int yCoordinateLimit;
-	// int line1PtsSize = line1Pts.size();
-	// int line2PtsSize = line2Pts.size();
+	// Can we have two separate loops storing the unique points and then use the other loop to find the y coordinates that match
+	// In order to do this we need to figure out which line has the steeper slope
+	// The line with the steeper slope will obviously hit the limit faster
 
-	// yCoordinateLimit = findYCoordinateLimit(line1Pts, line2Pts, line1PtsSize, line2PtsSize);
-	// int inc = 0;
+	// we don't need to find the steeper slope, in the line function above, I simply take all Vec2i where the y values are unique
 
-	// // Can we have two separate loops storing the unique points and then use the other loop to find the y coordinates that match
-	// // In order to do this we need to figure out which line has the steeper slope
-	// // The line with the steeper slope will obviously hit the limit faster
+	// TODO: this could be extracted
+	if (line1Pts[line1PtsSize - 1].y == yCoordinateLimit)
+	{
+		while (line1Pts[inc].y < yCoordinateLimit) 
+		{
+			// The reason we see no AA is because scanline rendering just draws horizontal lines
+			// You need to apply xiaolin AA on the outlines FIRST
+			Line::DDA(line1Pts[inc].x, line1Pts[inc].y, line2Pts[inc].x, line2Pts[inc].y, image, color);
+			inc++;
+		}
+	} else {
+		while (line2Pts[inc].y < yCoordinateLimit)
+		{
+			Line::DDA(line1Pts[inc].x, line1Pts[inc].y, line2Pts[inc].x, line2Pts[inc].y, image, color);
+			inc++;
+		}
+	}
 
-	// // we don't need to find the steeper slope, in the line function above, I simply take all Vec2i where the y values are unique
+	// we now need to draw horizontal lines between lines1Pts and lines3Pts
 
-	// // TODO: this could be extracted
-	// if (line1Pts[line1PtsSize - 1].y == yCoordinateLimit)
-	// {
-	// 	while (line1Pts[inc].y < yCoordinateLimit) 
-	// 	{
-	// 		// The reason we see no AA is because scanline rendering just draws horizontal lines
-	// 		// You need to apply xiaolin AA on the outlines FIRST
-	// 		line(line1Pts[inc].x, line1Pts[inc].y, line2Pts[inc].x, line2Pts[inc].y, image, color);
-	// 		inc++;
-	// 	}
-	// } else {
-	// 	while (line2Pts[inc].y < yCoordinateLimit)
-	// 	{
-	// 		line(line1Pts[inc].x, line1Pts[inc].y, line2Pts[inc].x, line2Pts[inc].y, image, color);
-	// 		inc++;
-	// 	}
-	// }
+	int incLine3 = 0;
+	while (inc < line1PtsSize && line1Pts[inc].y <= t2.y) // t2.y is the top point of the triangle so we can just use that
+	{
+		Line::DDA(line1Pts[inc].x, line1Pts[inc].y, line3Pts[incLine3].x, line3Pts[incLine3].y, image, color);
+		inc++;
+		incLine3++;
+	}
 
-	// // we now need to draw horizontal lines between lines1Pts and lines3Pts
-
-	// int incLine3 = 0;
-	// while (line1Pts[inc].y < t2.y) // t2.y is the top point of the triangle so we can just use that
-	// {
-	// 	line(line1Pts[inc].x, line1Pts[inc].y, line3Pts[incLine3].x, line3Pts[incLine3].y, image, color);
-	// 	inc++;
-	// 	incLine3++;
-	// }
-
-	// line1Pts.clear();
-	// line2Pts.clear();
-	// line3Pts.clear();
+	line1Pts.clear();
+	line2Pts.clear();
+	line3Pts.clear();
 
 	// Great job this works! However this only handles scenarios where the lowest y coordinate is on the left
 	// We need to handle the scenario where it is on the right
@@ -131,6 +130,7 @@ void triangle(Vec2i t0, Vec2i t1, Vec2i t2, TGAImage &image, TGAColor color, boo
 int main(int argc, char** argv) {
 	TGAImage lineImage(100, 100, TGAImage::RGB);
 	TGAImage triangleImage(200, 200, TGAImage::RGB);
+	TGAImage barytriangleImage(200, 200, TGAImage::RGB);
 	// image.set(75, 75, white);
 	// image.set(25, 75, blue);
 	// line(100,0,50,50,image,red);
@@ -142,29 +142,24 @@ int main(int argc, char** argv) {
 	// line(10,70,50,160,triangleImage, red);
 	// line(70,80,50,160,triangleImage, red);
 
-	Vec2i t0[3] = {Vec2i(10, 70), Vec2i(70, 80), Vec2i(50, 160)}; 
-	// isPointInsideTriangle(t0, Vec2i(1,1));
-	// isPointInsideTriangle(t0, Vec2i(40,100));
-	// isPointInsideTriangle(t0, Vec2i(200,200));
-
-	// triangle(t0[0], t0[1], t0[2], triangleImage, red, true);
-	barycentricPolygonRenderer(200,200, t0, triangleImage, red);
+	Vec2i t0[3] = {Vec2i(10, 70), Vec2i(70, 80), Vec2i(50, 160)};
+	triangle(t0[0], t0[1], t0[2], triangleImage, red, false);
+	barycentricPolygonRenderer(200,200, t0, barytriangleImage, red);
 
 	Vec2i t1[3] = {Vec2i(150, 1),  Vec2i(180, 50), Vec2i(70, 180)};
-	// triangle(t1[0], t1[1], t1[2], triangleImage, white, true);
-	barycentricPolygonRenderer(200,200, t1, triangleImage, white);
+	triangle(t1[0], t1[1], t1[2], triangleImage, white, false);
+	barycentricPolygonRenderer(200,200, t1, barytriangleImage, white);
 
 	// sorted by y-coordinate: {(150,1), (180, 50), (70, 180)}
 
 	Vec2i t2[3] = {Vec2i(180, 150), Vec2i(120, 160), Vec2i(130, 180)}; 
-	// triangle(t2[0], t2[1], t2[2], triangleImage, green, true);
-	barycentricPolygonRenderer(200,200, t2, triangleImage, green);
+	triangle(t2[0], t2[1], t2[2], triangleImage, green, false);
+	barycentricPolygonRenderer(200,200, t2, barytriangleImage, green);
 
-	// already sorted
-	
-	
-	// triangle(t1[0], t1[1], t1[2], triangleImage, white); 
-	// triangle(t2[0], t2[1], t2[2], triangleImage, green);
+	// already sorted, this might not always be the case however
+
+	barytriangleImage.flip_vertically();
+	barytriangleImage.write_tga_file("outputBaryTriangle.tga");
 
 	triangleImage.flip_vertically();
 	triangleImage.write_tga_file("outputTriangle.tga");
@@ -221,6 +216,23 @@ int main(int argc, char** argv) {
 
 	image2.flip_vertically(); // i want to have the origin at the left bottom corner of the image
 	image2.write_tga_file("output2.tga");
+
+	// TODO:
+	// 1. Bresenham is stuck in an infinite loop?
+	// 2. It's finally time to start sorting all your vertices by y-coordinates
+	TGAImage flatShadingRandom(width, height, TGAImage::RGB);
+	for (int i=0; i<model->nfaces(); i++) { 
+    	std::vector<int> face = model->face(i); 
+    	Vec2i screen_coords[3]; 
+    	for (int j=0; j<3; j++) { 
+        	Vec3f world_coords = model->vert(face[j]); 
+        	screen_coords[j] = Vec2i((world_coords.x+1.)*width/2., (world_coords.y+1.)*height/2.); 
+    	} 
+    	triangle(screen_coords[0], screen_coords[1], screen_coords[2], flatShadingRandom, TGAColor(rand()%255, rand()%255, rand()%255, 255)); 
+	}
+
+	flatShadingRandom.flip_vertically();
+	flatShadingRandom.write_tga_file("flatShading.tga");
 
 	delete model;
 	return 0;

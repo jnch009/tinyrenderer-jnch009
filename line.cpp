@@ -31,7 +31,7 @@ void Line::DDA(int x0, int y0, int x1, int y1, TGAImage &image, TGAColor color)
 	}
 }
 
-void Line::DDA(int x0, int y0, int x1, int y1, TGAImage &image, TGAColor color, std::vector<Vec2i> linePts)
+void Line::DDA(int x0, int y0, int x1, int y1, TGAImage &image, TGAColor color, std::vector<Vec2i> &linePts)
 {
 	int dx = x1 - x0;
 	int dy = y1 - y0;
