@@ -213,7 +213,7 @@ int main(int argc, char** argv) {
     }
 
 	image.flip_vertically(); // i want to have the origin at the left bottom corner of the image
-	image.write_tga_file("output.tga");
+	image.write_tga_file("outputWireframe.tga");
 
 	TGAImage image2(width, height, TGAImage::RGB);
     for (int i=0; i<model->nfaces(); i++) {
@@ -230,7 +230,7 @@ int main(int argc, char** argv) {
     }
 
 	image2.flip_vertically(); // i want to have the origin at the left bottom corner of the image
-	image2.write_tga_file("output2.tga");
+	image2.write_tga_file("outputWireframeAA.tga");
 
 	// TODO:
 	// 1. Bresenham is stuck in an infinite loop?
@@ -247,7 +247,7 @@ int main(int argc, char** argv) {
 	}
 
 	flatShadingRandom.flip_vertically();
-	flatShadingRandom.write_tga_file("flatShading.tga");
+	flatShadingRandom.write_tga_file("outputFlatShading.tga");
 
 	delete model;
 	return 0;
