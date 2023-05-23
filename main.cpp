@@ -44,12 +44,21 @@ bool isPointInsideTriangle(Vec2i vertices[], Vec2i point)
 
 void barycentricPolygonRenderer(Vec2i vertices[], TGAImage &image, TGAColor color)
 {
+	// My initial attempt of creating a bounding box was by iterating through the whole canvas
+	// which is obviously very inefficient
+
+	// This new strategy intelligently takes the lowest X and Y coordinates of the vertex list provided
+	// and then calculates the maximum width/height from those points.
+	// From that we have created a bounding box of points to check if they exist inside the triangle
+
 	int smallestX = std::min(vertices[0].x, std::min(vertices[1].x, vertices[2].x));
 	int maxWidth = std::max(abs(smallestX - vertices[0].x), std::max(abs(smallestX - vertices[1].x), abs(smallestX - vertices[2].x)));
 
 	int smallestY = std::min(vertices[0].y, std::min(vertices[1].y, vertices[2].y));
 	int maxHeight = std::max(abs(smallestY - vertices[0].y), std::max(abs(smallestY - vertices[1].y), abs(smallestY - vertices[2].y)));
 
+	// maxWidth/maxHeight represent the max distance from the smallestX/smallestY
+	// We therefore need to add them together to find the endpoint of the bounding box
 	for (int x = smallestX; x <= (smallestX + maxWidth); x++)
 	{
 		for (int y = smallestY; y <= (smallestY + maxHeight); y++)
