@@ -5,6 +5,8 @@ void Line::addPtsToVector(std::vector<Vec2i> &pts, double newX, double newY)
 {
 	int ptsSize = pts.size();
 	if (ptsSize == 0) pts.push_back(Vec2i(newX, newY));
+
+	// We're checking if [ptsSize-1].y != newY because we only want unique Y-values for scanline rendering
 	else if (ptsSize > 0 && pts[ptsSize-1].y != newY) {
 		pts.push_back(Vec2i(newX, newY));
 	}
