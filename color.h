@@ -1,3 +1,6 @@
+#ifndef __COLOR_H__
+#define __COLOR_H__
+
 #include "tgaimage.h"
 
 struct Color {
@@ -6,3 +9,5 @@ struct Color {
     const TGAColor blue = TGAColor(0, 0,   255,   255);
     const TGAColor green = TGAColor(0, 255,  0,   255);
 };
+
+#endif
