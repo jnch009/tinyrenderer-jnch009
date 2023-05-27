@@ -3,48 +3,40 @@
 #include "model.h"
 #include "line.h"
 #include "polygon.h"
+#include "color.h"
 
-const TGAColor white = TGAColor(255, 255, 255, 255);
-const TGAColor red   = TGAColor(255, 0,   0,   255);
-const TGAColor blue   = TGAColor(0, 0,   255,   255);
-const TGAColor green   = TGAColor(0, 255,  0,   255);
 Model *model = NULL;
-const int width  = 800;
-const int height = 800;
+Color color;
+int width  = 800;
+int height = 800;
 
 int main(int argc, char** argv) {
-	TGAImage lineImage(100, 100, TGAImage::RGB);
+	Line::drawRandomLines();
+	Line::drawRandomLines(2000,1275, 200);
+	Line::drawRandomLines(800,600, 50);
+	Line::drawRandomLines(1024,768, 75);
+	Line::drawRandomLines(2000,2000, 125);
+
 	TGAImage triangleImage(200, 200, TGAImage::RGB);
 	TGAImage barytriangleImage(200, 200, TGAImage::RGB);
 
 	Vec2i t0[3] = {Vec2i(50, 160), Vec2i(10, 70), Vec2i(70, 80)};
-	Polygon::triangle(t0, triangleImage, red, false);
-	Polygon::barycentricPolygonRenderer(t0, barytriangleImage, red);
+	Polygon::triangle(t0, triangleImage, color.red, false);
+	Polygon::barycentricPolygonRenderer(t0, barytriangleImage, color.red);
 
 	Vec2i t1[3] = {Vec2i(150, 1),  Vec2i(180, 50), Vec2i(70, 180)};
-	Polygon::triangle(t1, triangleImage, white, false);
-	Polygon::barycentricPolygonRenderer(t1, barytriangleImage, white);
-
-	// sorted by y-coordinate: {(150,1), (180, 50), (70, 180)}
+	Polygon::triangle(t1, triangleImage, color.white, false);
+	Polygon::barycentricPolygonRenderer(t1, barytriangleImage, color.white);
 
 	Vec2i t2[3] = {Vec2i(180, 150), Vec2i(120, 160), Vec2i(130, 180)}; 
-	Polygon::triangle(t2, triangleImage, green, false);
-	Polygon::barycentricPolygonRenderer(t2, barytriangleImage, green);
-
-	// already sorted, this might not always be the case however
+	Polygon::triangle(t2, triangleImage, color.green, false);
+	Polygon::barycentricPolygonRenderer(t2, barytriangleImage, color.green);
 
 	barytriangleImage.flip_vertically();
 	barytriangleImage.write_tga_file("outputBaryTriangle.tga");
 
 	triangleImage.flip_vertically();
 	triangleImage.write_tga_file("outputTriangle.tga");
-
-	Line::xiaolinAntiAliasing(50,0,100,90,lineImage, white);
-	Line::DDA(0,20,100,70,lineImage, white);
-	Line::bresenham(0,0,90,50,lineImage, white);
-
-	lineImage.flip_vertically(); // i want to have the origin at the left bottom corner of the image
-	lineImage.write_tga_file("outputLine.tga");
 
 	// argc is the argument count
 	// argv is the argument vector
@@ -68,7 +60,7 @@ int main(int argc, char** argv) {
             int y0 = (v0.y+1.)*height/2.;
             int x1 = (v1.x+1.)*width/2.;
             int y1 = (v1.y+1.)*height/2.;
-            Line::bresenham(x0, y0, x1, y1, image, white);
+            Line::bresenham(x0, y0, x1, y1, image, color.white);
         }
     }
 
@@ -85,7 +77,7 @@ int main(int argc, char** argv) {
             int y0 = (v0.y+1.)*height/2.;
             int x1 = (v1.x+1.)*width/2.;
             int y1 = (v1.y+1.)*height/2.;
-			Line::xiaolinAntiAliasing(x0, y0, x1, y1, image2, white);
+			Line::xiaolinAntiAliasing(x0, y0, x1, y1, image2, color.white);
         }
     }
 

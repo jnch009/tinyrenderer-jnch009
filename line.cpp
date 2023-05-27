@@ -179,3 +179,26 @@ void Line::xiaolinAntiAliasing(int x0, int y0, int x1, int y1, TGAImage &image, 
 		y += y_inc;
 	}
 }
+
+void Line::drawRandomLines(int w, int h, int lineCount) {
+	LineImage line(w, h);
+
+	for (int i = 0; i < lineCount; i++)
+	{
+		xiaolinAntiAliasing(rand() % line.width, rand() % line.height, rand() % line.width, rand() % line.height, *line.lineImage, line.color.red);
+		DDA(rand() % line.width, rand() % line.height, rand() % line.width, rand() % line.height, *line.lineImage, line.color.green);
+		bresenham(rand() % line.width, rand() % line.height, rand() % line.width, rand() % line.height, *line.lineImage, line.color.blue);
+	}
+
+	line.lineImage->flip_vertically(); // i want to have the origin at the left bottom corner of the image
+	std::string fileName = "outputRandomLines";
+	fileName += "_"+std::to_string(w);
+	fileName += "_"+std::to_string(h);
+	fileName += "_"+std::to_string(lineCount);
+	fileName += ".tga";
+	line.lineImage->write_tga_file(fileName.c_str());
+}
+
+void Line::drawStarburst() {
+	// Coming Soon
+}
