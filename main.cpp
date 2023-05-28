@@ -105,6 +105,7 @@ int main(int argc, char** argv) {
 	flatShadingRandomScanline.write_tga_file("outputFlatShadingScanline.tga");
 
 	TGAImage flatShadingWithLighting(width, height, TGAImage::RGB);
+	TGAImage flatBaryShadingWithLighting(width, height, TGAImage::RGB);
 	Vec3f light_dir(0,0,-1); // define light_dir
 
 	for (int i=0; i<model->nfaces(); i++) { 
@@ -120,12 +121,16 @@ int main(int argc, char** argv) {
     	n.normalize(); 
     	float intensity = n*light_dir; 
     	if (intensity>0) { 
-	        Polygon::triangle(screen_coords, flatShadingWithLighting, TGAColor(intensity*255, intensity*255, intensity*255, 255)); 
-    	} 
+	        Polygon::triangle(screen_coords, flatShadingWithLighting, TGAColor(intensity*255, intensity*255, intensity*255, 255));
+			Polygon::barycentricPolygonRenderer(screen_coords, flatBaryShadingWithLighting, TGAColor(intensity*255, intensity*255, intensity*255, 255));
+    	}
 	}
 
 	flatShadingWithLighting.flip_vertically();
 	flatShadingWithLighting.write_tga_file("outputFlatShadingLighting.tga");
+
+	flatBaryShadingWithLighting.flip_vertically();
+	flatBaryShadingWithLighting.write_tga_file("outputFlatBaryShadingLighting.tga");
 
 	delete model;
 	return 0;

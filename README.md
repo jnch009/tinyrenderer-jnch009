@@ -45,3 +45,22 @@ the worst case would be the entire grid filled with triangles.
 	// The line with the steeper slope will obviously hit the limit faster
 
 	// we don't need to find the steeper slope, in the line function above, I simply take all Vec2i where the y values are unique
+
+3. For using barycentric coordinates to render triangles, one issue that was annoying me was
+gaps appearing in the lighting render. I was not seeing the same issue occurring with scanline rendering and was puzzled. Turns out the problem was that because lines of a triangle might not always pass through each pixel exactly, you may end up with unlit pixels due to the fact that the barycentric coordinate is out of the range [0,1]. 
+
+   | Triangle Raster  | Flat Shading |
+   | ------------- | ------------- |
+   | <img src=".vs/Screenshot%202023-05-27%20212256.png" width="380"> | <img src=".vs/Screenshot 2023-05-27 212836.png" width="400"> |
+
+    What I decided to do was add a small margin of error (something like 0.003) to compare with the violated barycentric coordinate and if that coordinate was within the range then it would still be lit up. This was the result. The noticeable difference should be the top left of the triangle raster that the white pixel that was missing is now filled and in flat shading, you'll see the middle of the face has those black spots now filled in. It's not a perfect solution, but at least makes it comparable to rendering with scanline.
+
+	# Barycentric
+	| Triangle Raster  | Flat Shading |
+   | ------------- | ------------- |
+   | <img src=".vs/Screenshot 2023-05-27 213406.png" width="380"> | <img src=".vs/Screenshot 2023-05-27 213513.png" width="400"> |
+
+    # Scanline
+	| Triangle Raster  | Flat Shading |
+   | ------------- | ------------- |
+   | <img src=".vs/Screenshot Scanline triangle.png" width="380"> | <img src=".vs/Screenshot Scanline flat shading.png" width="400"> |
