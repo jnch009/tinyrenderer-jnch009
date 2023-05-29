@@ -64,3 +64,8 @@ gaps appearing in the lighting render. I was not seeing the same issue occurring
 	| Triangle Raster  | Flat Shading |
    | ------------- | ------------- |
    | <img src=".vs/Screenshot Scanline triangle.png" width="380"> | <img src=".vs/Screenshot Scanline flat shading.png" width="400"> |
+
+   # Correction to #3
+   The margin of error strategy does in fact mitigate the problem, it unfortunately violates the actual use case of barycentric coordinates. Namely, barycentric coordinates represent the location of a point inside of a simplex where the 3 coordinates are within the range [0,1] should they exist in the triangle. If any of the coordinates are found outside of the range, then it is NOT inside the triangle and therefore the pixel should not be lit. After doing a bit more research, I found this article https://www.scratchapixel.com/lessons/3d-basic-rendering/ray-tracing-rendering-a-triangle/barycentric-coordinates.html which helped clarify the usage of using cross and dot products to solve the problem. Taking the cross product of two edges or the cross product of one edge with a line to our point would give us a normal vector. If we take the dot product of these two vectors, we may get a negative value. A negative dot product means that the vectors are pointing in opposite directions. What makes this really useful in our case is that we can conclude that the point does not exist on the triangle and therefore we don't draw a pixel.
+
+   <img src=".vs/Barycentric using cross and dot products.png" width="380">

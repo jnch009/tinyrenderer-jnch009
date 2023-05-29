@@ -2,38 +2,26 @@
 #include "polygon.h"
 #include "line.h"
 #include "color.h"
+#include "geometry.h"
 
 // For now: assuming that the vertices array is length 3
 bool Polygon::isPointInsideTriangle(Vec2i vertices[], Vec2i point)
 {
-	int baryCenter1Numerator = ((vertices[1].y - vertices[2].y) * (point.x - vertices[2].x)) + ((vertices[2].x - vertices[1].x)*(point.y - vertices[2].y));
-	int denominator = ((vertices[1].y - vertices[2].y) * (vertices[0].x - vertices[2].x)) + ((vertices[2].x - vertices[1].x)*(vertices[0].y - vertices[2].y));
-	
-	float baryCenter1 = (float)baryCenter1Numerator / (float)denominator;
-	bool bary1InsideTriangle = baryCenter1 <= 1 && baryCenter1 >= 0;
+	Vec3f triangleNormal = (Vec3f(vertices[1].x, vertices[1].y, 0) - Vec3f(vertices[0].x, vertices[0].y, 0))^(Vec3f(vertices[2].x, vertices[2].y, 0) - Vec3f(vertices[0].x, vertices[0].y, 0));
 
-	int baryCenter2Numerator = ((vertices[2].y - vertices[0].y)*(point.x - vertices[2].x)) + ((vertices[0].x - vertices[2].x)*(point.y - vertices[2].y));
-	float baryCenter2 = (float)baryCenter2Numerator / (float)denominator;
-	bool bary2InsideTriangle = baryCenter2 <= 1 && baryCenter2 >= 0;
+	// calculating normal vector of subtriangle 1
+	Vec3f subtriangleNrm1 = (Vec3f(vertices[0].x, vertices[0].y, 0) - Vec3f(vertices[2].x, vertices[2].y, 0))^(Vec3f(point.x, point.y, 0) - Vec3f(vertices[2].x, vertices[2].y, 0));
 
-	float baryCenter3 = 1.0f - baryCenter1 - baryCenter2;
-	bool bary3InsideTriangle = baryCenter3 <= 1 && baryCenter3 >= 0;
+	// calculating normal vector of subtriangle 2
+	Vec3f subtriangleNrm2 = (Vec3f(vertices[1].x, vertices[1].y, 0) - Vec3f(vertices[0].x, vertices[0].y, 0))^(Vec3f(point.x, point.y, 0) - Vec3f(vertices[0].x, vertices[0].y, 0));
 
-	float marginOfError = 0.003;
-	bool vViolated = baryCenter1 < 0 || baryCenter1 > 1;
-	bool wViolated = baryCenter2 < 0 || baryCenter2 > 1;
-	bool uViolated = baryCenter3 < 0 || baryCenter3 > 1; 
+	// calculating normal vector of subtriangle 3
+	Vec3f subtriangleNrm3 = (Vec3f(vertices[2].x, vertices[2].y, 0) - Vec3f(vertices[1].x, vertices[1].y, 0))^(Vec3f(point.x, point.y, 0) - Vec3f(vertices[1].x, vertices[1].y, 0));
 
-	if (vViolated && fabs(baryCenter1) <= marginOfError) {
-		return true;
-	}
-	else if (wViolated && fabs(baryCenter2) <= marginOfError) {
-		return true;
-	} else if (uViolated && fabs(baryCenter3) <= marginOfError) {
-		return true;
-	}
-
-	return bary1InsideTriangle && bary2InsideTriangle && bary3InsideTriangle ? true : false;
+	/* We can imagine u_Nrm, v_Nrm and w_Nrm as the normal vectors of subtriangles of P
+	If P exists in the triangle then each subtriangle would have their vectors facing the same direction as the main triangle. 
+	Otherwise, one of the subtriangles is outside since it is pointing the opposite direction and therefore it doesn't exist inside. */
+	return triangleNormal*subtriangleNrm1 < 0 || triangleNormal*subtriangleNrm2 < 0 || triangleNormal*subtriangleNrm3 < 0 ? false : true;
 }
 
 void Polygon::barycentricPolygonRenderer(Vec2i vertices[], TGAImage &image, TGAColor color)
