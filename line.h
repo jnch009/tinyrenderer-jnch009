@@ -5,18 +5,19 @@
 #include "geometry.h"
 #include "tgaimage.h"
 #include "color.h"
+#include "model.h"
 
 namespace Line {
     inline int width = 800;
     inline int height = 800;
     inline int bpp = TGAImage::RGB;
     inline int randomLines = 25;
+    inline Color color;
 
     class LineImage {
         public:
             int width;
             int height;
-            Color color;
             TGAImage *lineImage;
             LineImage() {
                 lineImage = new TGAImage(Line::width, Line::height, Line::bpp);
@@ -36,6 +37,7 @@ namespace Line {
     void xiaolinAntiAliasing(int x0, int y0, int x1, int y1, TGAImage &image, TGAColor color);
     void drawRandomLines(int w = Line::width, int h = Line::height, int lineCount = Line::randomLines);
     void drawStarburst();
+    void drawWireframe(Model *model, std::string wireFrameName, std::string method = "bresenham");
 }
 
 
