@@ -17,26 +17,16 @@ int main(int argc, char** argv) {
 	Line::drawRandomLines(1024,768, 75);
 	Line::drawRandomLines(2000,2000, 125);
 
-	TGAImage triangleImage(200, 200, TGAImage::RGB);
-	TGAImage barytriangleImage(200, 200, TGAImage::RGB);
+	std::vector<TProperties> trianglesToRender = {
+		{{Vec2i(50, 160), Vec2i(10, 70), Vec2i(70, 80)}, color.red},
+		{{Vec2i(150, 1),  Vec2i(180, 50), Vec2i(70, 180)}, color.white},
+		{{Vec2i(180, 150), Vec2i(120, 160), Vec2i(130, 180)}, color.blue},
+		{{Vec2i(20, 150), Vec2i(120, 125), Vec2i(130, 180)}, color.green}
+	};
 
-	Vec2i t0[3] = {Vec2i(50, 160), Vec2i(10, 70), Vec2i(70, 80)};
-	Polygon::triangle(t0, triangleImage, color.red, false);
-	Polygon::barycentricPolygonRenderer(t0, barytriangleImage, color.red);
-
-	Vec2i t1[3] = {Vec2i(150, 1),  Vec2i(180, 50), Vec2i(70, 180)};
-	Polygon::triangle(t1, triangleImage, color.white, false);
-	Polygon::barycentricPolygonRenderer(t1, barytriangleImage, color.white);
-
-	Vec2i t2[3] = {Vec2i(180, 150), Vec2i(120, 160), Vec2i(130, 180)}; 
-	Polygon::triangle(t2, triangleImage, color.green, false);
-	Polygon::barycentricPolygonRenderer(t2, barytriangleImage, color.green);
-
-	barytriangleImage.flip_vertically();
-	barytriangleImage.write_tga_file("outputBaryTriangle.tga");
-
-	triangleImage.flip_vertically();
-	triangleImage.write_tga_file("outputTriangle.tga");
+	// Designated Initializers (C++20)
+	Polygon::drawTriangle({.t = trianglesToRender, .width = 200, .height = 200});
+	Polygon::drawTriangle({.t = trianglesToRender, .width = 200, .height = 200, .useBary = true});
 
 	// argc is the argument count
 	// argv is the argument vector
@@ -63,7 +53,7 @@ int main(int argc, char** argv) {
         	screen_coords[j] = Vec2i((world_coords.x+1.)*width/2., (world_coords.y+1.)*height/2.); 
     	} 
     	Polygon::barycentricPolygonRenderer(screen_coords, flatShadingRandomBary, TGAColor(rand()%255, rand()%255, rand()%255, 255)); 
-		Polygon::triangle(screen_coords, flatShadingRandomScanline, TGAColor(rand()%255, rand()%255, rand()%255, 255)); 
+		Polygon::scanline(screen_coords, flatShadingRandomScanline, TGAColor(rand()%255, rand()%255, rand()%255, 255)); 
 	}
 
 	flatShadingRandomBary.flip_vertically();
@@ -89,7 +79,7 @@ int main(int argc, char** argv) {
     	n.normalize(); 
     	float intensity = n*light_dir; 
     	if (intensity>0) { 
-	        Polygon::triangle(screen_coords, flatShadingWithLighting, TGAColor(intensity*255, intensity*255, intensity*255, 255));
+	        Polygon::scanline(screen_coords, flatShadingWithLighting, TGAColor(intensity*255, intensity*255, intensity*255, 255));
 			Polygon::barycentricPolygonRenderer(screen_coords, flatBaryShadingWithLighting, TGAColor(intensity*255, intensity*255, intensity*255, 255));
     	}
 	}

@@ -71,7 +71,7 @@ void Polygon::sortPolygonByYCoordinates(Vec2i vertices[])
 }
 
 // TODO: add some comments for your thought process then add it to the README
-void Polygon::triangle(Vec2i t[], TGAImage &image, TGAColor color, bool useAA) {
+void Polygon::scanline(Vec2i t[], TGAImage &image, TGAColor color, bool useAA) {
 	/* The idea to use vectors is to keep track of all points
 	to be drawn on the lines so that we'd be able to draw a horizontal line between the points */
 	
@@ -137,5 +137,22 @@ void Polygon::triangle(Vec2i t[], TGAImage &image, TGAColor color, bool useAA) {
 	line3Pts.clear();
 }
 
+void Polygon::drawTriangle(TriangleArgs args) {
+	Polygon triangle(args.width, args.height);
 
+	for (auto v : args.t) {
+		if (args.useBary) {
+			// https://stackoverflow.com/questions/2923272/how-to-convert-vector-to-array
+			barycentricPolygonRenderer(&v.v[0], *triangle.image, v.tColor);	
+		} else {
+			scanline(&v.v[0], *triangle.image, v.tColor);
+		}
+	}
 
+	triangle.image->flip_vertically();
+	std::string fileName = args.useBary ? "outputBaryTriangle" : "outputTriangle";
+	fileName += "_"+std::to_string(args.width)+"_"+std::to_string(args.height);
+	fileName += "_"+std::to_string(rand() % 1000);
+	fileName += ".tga";
+	triangle.image->write_tga_file(fileName.c_str());
+}	
