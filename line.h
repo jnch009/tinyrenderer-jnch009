@@ -6,28 +6,14 @@
 #include "tgaimage.h"
 #include "color.h"
 #include "model.h"
+#include "image.h"
 
 namespace Line {
-    inline int width = 800;
-    inline int height = 800;
-    inline int bpp = TGAImage::RGB;
     inline int randomLines = 25;
     inline Color color;
 
-    class LineImage {
-        public:
-            int width;
-            int height;
-            TGAImage *lineImage;
-            LineImage() {
-                lineImage = new TGAImage(Line::width, Line::height, Line::bpp);
-            };
-
-            LineImage(int w, int h) {
-                lineImage = new TGAImage(w, h, bpp);
-                width = w;
-                height = h;
-            }
+    class LineImage : public BaseImage::Image {
+        using Image::Image;
     };
 
     void addPtsToVector(std::vector<Vec2i> &pts, double newX, double newY);
@@ -35,7 +21,7 @@ namespace Line {
     void DDA(int x0, int y0, int x1, int y1, TGAImage &image, TGAColor color, std::vector<Vec2i> &linePts);
     void bresenham(int x0, int y0, int x1, int y1, TGAImage &image, TGAColor color);
     void xiaolinAntiAliasing(int x0, int y0, int x1, int y1, TGAImage &image, TGAColor color);
-    void drawRandomLines(int w = Line::width, int h = Line::height, int lineCount = Line::randomLines);
+    void drawRandomLines(int w = BaseImage::width, int h = BaseImage::height, int lineCount = randomLines);
     void drawStarburst();
     void drawWireframe(Model *model, std::string wireFrameName, std::string method = "bresenham");
 }

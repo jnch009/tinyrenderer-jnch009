@@ -84,7 +84,7 @@ void Polygon::triangle(Vec2i t[], TGAImage &image, TGAColor color, bool useAA) {
 	std::vector<Vec2i> line3Pts;
 	
 	/* THIS IS VERY IMPORTANT so that we can maintain consistency for rendering the triangle in halves */
-    Polygon::sortPolygonByYCoordinates(t);
+    sortPolygonByYCoordinates(t);
 
 	// Applying AA to the lines (WIP)
 	if (useAA) {

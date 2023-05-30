@@ -185,18 +185,18 @@ void Line::drawRandomLines(int w, int h, int lineCount) {
 
 	for (int i = 0; i < lineCount; i++)
 	{
-		xiaolinAntiAliasing(rand() % line.width, rand() % line.height, rand() % line.width, rand() % line.height, *line.lineImage, Line::color.red);
-		DDA(rand() % line.width, rand() % line.height, rand() % line.width, rand() % line.height, *line.lineImage, Line::color.green);
-		bresenham(rand() % line.width, rand() % line.height, rand() % line.width, rand() % line.height, *line.lineImage, Line::color.blue);
+		xiaolinAntiAliasing(rand() % line.width, rand() % line.height, rand() % line.width, rand() % line.height, *line.image, Line::color.red);
+		DDA(rand() % line.width, rand() % line.height, rand() % line.width, rand() % line.height, *line.image, Line::color.green);
+		bresenham(rand() % line.width, rand() % line.height, rand() % line.width, rand() % line.height, *line.image, Line::color.blue);
 	}
 
-	line.lineImage->flip_vertically(); // i want to have the origin at the left bottom corner of the image
+	line.image->flip_vertically(); // i want to have the origin at the left bottom corner of the image
 	std::string fileName = "outputRandomLines";
 	fileName += "_"+std::to_string(w);
 	fileName += "_"+std::to_string(h);
 	fileName += "_"+std::to_string(lineCount);
 	fileName += ".tga";
-	line.lineImage->write_tga_file(fileName.c_str());
+	line.image->write_tga_file(fileName.c_str());
 }
 
 void Line::drawStarburst() {
@@ -209,7 +209,7 @@ void Line::drawWireframe(Model *model, std::string wireFrameName, std::string me
 	}
 
 	auto lineDrawingMechanism = Line::bresenham;
-    TGAImage image(width, height, TGAImage::RGB);
+	LineImage line;
 
 	if (method == "DDA" || method == "dda") {
 		lineDrawingMechanism = Line::DDA;
@@ -224,17 +224,17 @@ void Line::drawWireframe(Model *model, std::string wireFrameName, std::string me
         for (int j=0; j<3; j++) {
             Vec3f v0 = model->vert(face[j]);
             Vec3f v1 = model->vert(face[(j+1)%3]);
-            int x0 = (v0.x+1.)*width/2.;
-            int y0 = (v0.y+1.)*height/2.;
-            int x1 = (v1.x+1.)*width/2.;
-            int y1 = (v1.y+1.)*height/2.;
+            int x0 = (v0.x+1.)*line.width/2.;
+            int y0 = (v0.y+1.)*line.height/2.;
+            int x1 = (v1.x+1.)*line.width/2.;
+            int y1 = (v1.y+1.)*line.height/2.;
 
-            lineDrawingMechanism(x0, y0, x1, y1, image, Line::color.white);
+            lineDrawingMechanism(x0, y0, x1, y1, *line.image, Line::color.white);
         }
     }
 
-	image.flip_vertically(); // i want to have the origin at the left bottom corner of the image
+	line.image->flip_vertically(); // i want to have the origin at the left bottom corner of the image
 	std::string fileName = wireFrameName;
 	fileName += ".tga";
-	image.write_tga_file(fileName.c_str());
+	line.image->write_tga_file(fileName.c_str());
 }
