@@ -155,4 +155,67 @@ void Polygon::drawTriangle(TriangleArgs args) {
 	fileName += "_"+std::to_string(rand() % 1000);
 	fileName += ".tga";
 	triangle.image->write_tga_file(fileName.c_str());
+
+	delete triangle.image;
 }	
+
+// Uncomment out the scanline code if needed
+// Will use barycentric for the time being
+void Polygon::drawFlatShadingRandom(Model *model, FlatShadingArgs args) {
+	Polygon flatShadingRandomBary;
+	// Polygon flatShadingRandomScanline;
+
+	for (int i=0; i<model->nfaces(); i++) {
+    	std::vector<int> face = model->face(i);
+    	Vec2i screen_coords[3];
+    	for (int j=0; j<3; j++) {
+        	Vec3f world_coords = model->vert(face[j]); 
+        	screen_coords[j] = Vec2i((world_coords.x+1.)*args.width/2., (world_coords.y+1.)*args.height/2.); 
+    	} 
+    	barycentricPolygonRenderer(screen_coords, *flatShadingRandomBary.image, TGAColor(rand()%255, rand()%255, rand()%255, 255)); 
+		// scanline(screen_coords, *flatShadingRandomScanline.image, TGAColor(rand()%255, rand()%255, rand()%255, 255));
+	}
+
+	flatShadingRandomBary.image->flip_vertically();
+	flatShadingRandomBary.image->write_tga_file("outputFlatShadingBary.tga");
+
+	// flatShadingRandomScanline.image->flip_vertically();
+	// flatShadingRandomScanline.image->write_tga_file("outputFlatShadingScanline.tga");
+
+	delete flatShadingRandomBary.image;
+	// delete flatShadingRandomScanline.image;
+}
+
+// Uncomment out the scanline code if needed
+// Will use barycentric for the time being
+void Polygon::drawFlatShadingWithLighting(Model *model, FlatLightingArgs args) {
+	// Polygon flatShadingWithLighting;
+	Polygon flatBaryShadingWithLighting;
+
+	for (int i=0; i<model->nfaces(); i++) { 
+    	std::vector<int> face = model->face(i); 
+    	Vec2i screen_coords[3]; 
+    	Vec3f world_coords[3]; 
+    	for (int j=0; j<3; j++) { 
+        	Vec3f v = model->vert(face[j]); 
+        	screen_coords[j] = Vec2i((v.x+1.)*args.width/2., (v.y+1.)*args.height/2.); 
+        	world_coords[j]  = v; 
+    	} 
+    	Vec3f n = (world_coords[2]-world_coords[0])^(world_coords[1]-world_coords[0]); 
+    	n.normalize(); 
+    	float intensity = n*args.lightDir;
+    	if (intensity>0) { 
+	        // scanline(screen_coords, *flatShadingWithLighting.image, TGAColor(intensity*255, intensity*255, intensity*255, 255));
+			barycentricPolygonRenderer(screen_coords, *flatBaryShadingWithLighting.image, TGAColor(intensity*255, intensity*255, intensity*255, 255));
+    	}
+	}
+
+	// flatShadingWithLighting.image->flip_vertically();
+	// flatShadingWithLighting.image->write_tga_file("outputFlatShadingLighting.tga");
+
+	flatBaryShadingWithLighting.image->flip_vertically();
+	flatBaryShadingWithLighting.image->write_tga_file("outputFlatBaryShadingLighting.tga");
+
+	// delete flatShadingWithLighting.image;
+	delete flatBaryShadingWithLighting.image;
+}

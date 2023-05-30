@@ -5,18 +5,29 @@
 #include "geometry.h"
 #include "tgaimage.h"
 #include "image.h"
+#include "model.h"
 
 struct TProperties {
     std::vector<Vec2i> v;
     TGAColor tColor;
 };
 
-struct TriangleArgs {
-    std::vector<TProperties> t;
+struct BaseArgs {
     int width = BaseImage::width;
     int height = BaseImage::height;
+    int bpp = BaseImage::bpp;
+};
+
+struct TriangleArgs : BaseArgs {
+    std::vector<TProperties> t;
     bool useBary = false;
     bool useAA = false;
+};
+
+struct FlatShadingArgs : BaseArgs {};
+
+struct FlatLightingArgs : BaseArgs {
+    Vec3f lightDir = Vec3f(0,0,-1);
 };
 
 namespace Polygon {
@@ -31,6 +42,8 @@ namespace Polygon {
     void sortPolygonByYCoordinates(Vec2i vertices[]);
 
     void drawTriangle(TriangleArgs args);
+    void drawFlatShadingRandom(Model *model, FlatShadingArgs args = {});
+    void drawFlatShadingWithLighting(Model *model, FlatLightingArgs args);
 }
 
 #endif

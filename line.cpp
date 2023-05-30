@@ -197,6 +197,8 @@ void Line::drawRandomLines(int w, int h, int lineCount) {
 	fileName += "_"+std::to_string(lineCount);
 	fileName += ".tga";
 	line.image->write_tga_file(fileName.c_str());
+
+	delete line.image;
 }
 
 void Line::drawStarburst() {
@@ -237,4 +239,6 @@ void Line::drawWireframe(Model *model, std::string wireFrameName, std::string me
 	std::string fileName = wireFrameName;
 	fileName += ".tga";
 	line.image->write_tga_file(fileName.c_str());
+
+	delete line.image;
 }

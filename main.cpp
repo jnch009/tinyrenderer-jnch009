@@ -7,8 +7,6 @@
 
 Model *model = NULL;
 Color color;
-int width  = 800;
-int height = 800;
 
 int main(int argc, char** argv) {
 	Line::drawRandomLines();
@@ -25,8 +23,8 @@ int main(int argc, char** argv) {
 	};
 
 	// Designated Initializers (C++20)
-	Polygon::drawTriangle({.t = trianglesToRender, .width = 200, .height = 200});
-	Polygon::drawTriangle({.t = trianglesToRender, .width = 200, .height = 200, .useBary = true});
+	Polygon::drawTriangle({BaseArgs { .width = 200, .height = 200 }, .t = trianglesToRender});
+	Polygon::drawTriangle({BaseArgs { .width = 200, .height = 200,}, .t = trianglesToRender, .useBary = true});
 
 	// argc is the argument count
 	// argv is the argument vector
@@ -41,54 +39,8 @@ int main(int argc, char** argv) {
 
 	Line::drawWireframe(model, "outputWireframe");
 	Line::drawWireframe(model, "outputWireframeAA", "aa");
-
-	TGAImage flatShadingRandomBary(width, height, TGAImage::RGB);
-	TGAImage flatShadingRandomScanline(width, height, TGAImage::RGB);
-
-	for (int i=0; i<model->nfaces(); i++) { 
-    	std::vector<int> face = model->face(i); 
-    	Vec2i screen_coords[3]; 
-    	for (int j=0; j<3; j++) { 
-        	Vec3f world_coords = model->vert(face[j]); 
-        	screen_coords[j] = Vec2i((world_coords.x+1.)*width/2., (world_coords.y+1.)*height/2.); 
-    	} 
-    	Polygon::barycentricPolygonRenderer(screen_coords, flatShadingRandomBary, TGAColor(rand()%255, rand()%255, rand()%255, 255)); 
-		Polygon::scanline(screen_coords, flatShadingRandomScanline, TGAColor(rand()%255, rand()%255, rand()%255, 255)); 
-	}
-
-	flatShadingRandomBary.flip_vertically();
-	flatShadingRandomBary.write_tga_file("outputFlatShadingBary.tga");
-
-	flatShadingRandomScanline.flip_vertically();
-	flatShadingRandomScanline.write_tga_file("outputFlatShadingScanline.tga");
-
-	TGAImage flatShadingWithLighting(width, height, TGAImage::RGB);
-	TGAImage flatBaryShadingWithLighting(width, height, TGAImage::RGB);
-	Vec3f light_dir(0,0,-1); // define light_dir
-
-	for (int i=0; i<model->nfaces(); i++) { 
-    	std::vector<int> face = model->face(i); 
-    	Vec2i screen_coords[3]; 
-    	Vec3f world_coords[3]; 
-    	for (int j=0; j<3; j++) { 
-        	Vec3f v = model->vert(face[j]); 
-        	screen_coords[j] = Vec2i((v.x+1.)*width/2., (v.y+1.)*height/2.); 
-        	world_coords[j]  = v; 
-    	} 
-    	Vec3f n = (world_coords[2]-world_coords[0])^(world_coords[1]-world_coords[0]); 
-    	n.normalize(); 
-    	float intensity = n*light_dir; 
-    	if (intensity>0) { 
-	        Polygon::scanline(screen_coords, flatShadingWithLighting, TGAColor(intensity*255, intensity*255, intensity*255, 255));
-			Polygon::barycentricPolygonRenderer(screen_coords, flatBaryShadingWithLighting, TGAColor(intensity*255, intensity*255, intensity*255, 255));
-    	}
-	}
-
-	flatShadingWithLighting.flip_vertically();
-	flatShadingWithLighting.write_tga_file("outputFlatShadingLighting.tga");
-
-	flatBaryShadingWithLighting.flip_vertically();
-	flatBaryShadingWithLighting.write_tga_file("outputFlatBaryShadingLighting.tga");
+	Polygon::drawFlatShadingRandom(model);
+	Polygon::drawFlatShadingWithLighting(model, {.lightDir=Vec3f(0,0,-1)});
 
 	delete model;
 	return 0;
