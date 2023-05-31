@@ -224,8 +224,6 @@ void Line::drawStarburst(int w, int h, int linesToDraw, int radius) {
 		bresenham(midX, midY, newX, newY, *line.image, Line::color.white);
 	}
 
-	// now continue the above until you get to 90 deg
-
 	line.image->flip_vertically();
 	line.image->write_tga_file("outputStarburst.tga");
 }
