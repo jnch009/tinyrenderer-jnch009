@@ -130,11 +130,11 @@ void Line::xiaolinAntiAliasing(int x0, int y0, int x1, int y1, TGAImage &image, 
 
 		// we don't need both of these, we need to check which increment is not 1
 		// because of the "steps" logic above, one of x_inc or y_inc will be 1
-		float wholeY = floor(y);
-		float wholeX = floor(x);
+		double wholeY = floor(y);
+		double wholeX = floor(x);
 		
 		// this means we have a decimal part and verifying the y-axis
-		if (x_inc == 1 && y - wholeY != wholeY) {
+		if ((x_inc == 1 || x_inc == -1) && y - wholeY != wholeY) {
 			// 1 - (y - wholeY) gives us the distance between the upper pixel and our point
 			// (y - wholeY) gives us the distance between the bottom pixel and our point
 
@@ -142,12 +142,12 @@ void Line::xiaolinAntiAliasing(int x0, int y0, int x1, int y1, TGAImage &image, 
 			// ie. if the distance from the top is 30% then that pixel should have an intensity of 70%
 
 			// TODO: extract this?
-			float topIntensity = y - wholeY;
-			float bottomIntensity = 1 - (y - wholeY);
+			double topIntensity = y - wholeY;
+			double bottomIntensity = 1 - (y - wholeY);
 
 			// TODO: this can be extracted out into a new function
-			TGAColor topColor = TGAColor(color.r* topIntensity, color.g* topIntensity, color.b* topIntensity, color.a * topIntensity);
-			TGAColor bottomColor = TGAColor(color.r * bottomIntensity, color.g * bottomIntensity, color.b * bottomIntensity, color.a * bottomIntensity);
+			TGAColor topColor = TGAColor(color.r* topIntensity, color.g* topIntensity, color.b* topIntensity, color.a);
+			TGAColor bottomColor = TGAColor(color.r * bottomIntensity, color.g * bottomIntensity, color.b * bottomIntensity, color.a);
 
 
 			// TODO: we should be able to extract this out as well
@@ -158,12 +158,12 @@ void Line::xiaolinAntiAliasing(int x0, int y0, int x1, int y1, TGAImage &image, 
 				image.set(x, round(y) + 1, topColor);
 				image.set(x, round(y), bottomColor);
 			}
-		} else if (y_inc == 1 && x - wholeX != wholeX) {
-			float rightIntensity = x - wholeX;
-			float leftIntensity = 1 - (x - wholeX);
+		} else if ((y_inc == 1 || y_inc == -1) && x - wholeX != wholeX) {
+			double rightIntensity = x - wholeX;
+			double leftIntensity = 1 - (x - wholeX);
 
-			TGAColor rightColor = TGAColor(color.r* rightIntensity, color.g * rightIntensity, color.b* rightIntensity , color.a * rightIntensity);
-			TGAColor leftColor = TGAColor(color.r* leftIntensity, color.g* leftIntensity, color.b * leftIntensity, color.a * leftIntensity);
+			TGAColor rightColor = TGAColor(color.r* rightIntensity, color.g * rightIntensity, color.b* rightIntensity , color.a);
+			TGAColor leftColor = TGAColor(color.r* leftIntensity, color.g* leftIntensity, color.b * leftIntensity, color.a);
 
 			if (x - wholeX >= 0.5) {
 				image.set(round(x), y, rightColor);
@@ -172,8 +172,6 @@ void Line::xiaolinAntiAliasing(int x0, int y0, int x1, int y1, TGAImage &image, 
 				image.set(round(x) + 1, y, rightColor);
 				image.set(round(x), y, leftColor);
 			}
-		} else {
-			image.set(x, y, color);
 		}
 
 		x += x_inc;
@@ -186,7 +184,7 @@ void Line::drawRandomLines(int w, int h, int lineCount) {
 
 	for (int i = 0; i < lineCount; i++)
 	{
-		xiaolinAntiAliasing(rand() % line.width, rand() % line.height, rand() % line.width, rand() % line.height, *line.image, Line::color.red);
+		xiaolinAntiAliasing(rand() % line.width, rand() % line.height, rand() % line.width, rand() % line.height, *line.image, Line::color.white);
 		DDA(rand() % line.width, rand() % line.height, rand() % line.width, rand() % line.height, *line.image, Line::color.green);
 		bresenham(rand() % line.width, rand() % line.height, rand() % line.width, rand() % line.height, *line.image, Line::color.blue);
 	}
@@ -221,7 +219,7 @@ void Line::drawStarburst(int w, int h, int linesToDraw, int radius) {
 		float newX = midX + radius * cos((deg * M_PI) / 180);
 		float newY = midY + radius * sin((deg * M_PI) / 180);
 
-		bresenham(midX, midY, newX, newY, *line.image, Line::color.white);
+		xiaolinAntiAliasing(midX, midY, newX, newY, *line.image, Line::color.white);
 	}
 
 	line.image->flip_vertically();
