@@ -22,6 +22,7 @@ int main(int argc, char** argv) {
 		{{Vec2i(20, 150), Vec2i(120, 125), Vec2i(130, 180)}, color.green}
 	};
 
+	Line::drawStarburst();
 	// Designated Initializers (C++20)
 	Polygon::drawTriangle({BaseArgs { .width = 200, .height = 200 }, .t = trianglesToRender});
 	Polygon::drawTriangle({BaseArgs { .width = 200, .height = 200,}, .t = trianglesToRender, .useBary = true});

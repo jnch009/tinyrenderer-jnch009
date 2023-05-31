@@ -22,7 +22,7 @@ namespace Line {
     void bresenham(int x0, int y0, int x1, int y1, TGAImage &image, TGAColor color);
     void xiaolinAntiAliasing(int x0, int y0, int x1, int y1, TGAImage &image, TGAColor color);
     void drawRandomLines(int w = BaseImage::width, int h = BaseImage::height, int lineCount = randomLines);
-    void drawStarburst();
+    void drawStarburst(int w = 300, int h = 300, int linesToDraw = 90, int radius = 125);
     void drawWireframe(Model *model, std::string wireFrameName, std::string method = "bresenham");
 }
 

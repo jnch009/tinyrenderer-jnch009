@@ -1,5 +1,6 @@
 #include <iostream>
 #include "line.h"
+#include <cmath>
 
 void Line::addPtsToVector(std::vector<Vec2i> &pts, double newX, double newY)
 {
@@ -145,8 +146,8 @@ void Line::xiaolinAntiAliasing(int x0, int y0, int x1, int y1, TGAImage &image, 
 			float bottomIntensity = 1 - (y - wholeY);
 
 			// TODO: this can be extracted out into a new function
-			TGAColor topColor = TGAColor(color.r* topIntensity, color.g* topIntensity, color.b* topIntensity, color.a);
-			TGAColor bottomColor = TGAColor(color.r* bottomIntensity, color.g* bottomIntensity, color.b* bottomIntensity, color.a);
+			TGAColor topColor = TGAColor(color.r* topIntensity, color.g* topIntensity, color.b* topIntensity, color.a * topIntensity);
+			TGAColor bottomColor = TGAColor(color.r * bottomIntensity, color.g * bottomIntensity, color.b * bottomIntensity, color.a * bottomIntensity);
 
 
 			// TODO: we should be able to extract this out as well
@@ -161,8 +162,8 @@ void Line::xiaolinAntiAliasing(int x0, int y0, int x1, int y1, TGAImage &image, 
 			float rightIntensity = x - wholeX;
 			float leftIntensity = 1 - (x - wholeX);
 
-			TGAColor rightColor = TGAColor(color.r * rightIntensity, color.g * rightIntensity, color.b * rightIntensity, color.a);
-			TGAColor leftColor = TGAColor(color.r * leftIntensity, color.g * leftIntensity, color.b * leftIntensity, color.a);
+			TGAColor rightColor = TGAColor(color.r* rightIntensity, color.g * rightIntensity, color.b* rightIntensity , color.a * rightIntensity);
+			TGAColor leftColor = TGAColor(color.r* leftIntensity, color.g* leftIntensity, color.b * leftIntensity, color.a * leftIntensity);
 
 			if (x - wholeX >= 0.5) {
 				image.set(round(x), y, rightColor);
@@ -201,8 +202,32 @@ void Line::drawRandomLines(int w, int h, int lineCount) {
 	delete line.image;
 }
 
-void Line::drawStarburst() {
-	// Coming Soon
+void Line::drawStarburst(int w, int h, int linesToDraw, int radius) {
+	LineImage line(w,h);
+
+	int midX = w/2;
+	int midY = h/2;
+
+	/* 
+		It took me awhile to realize that the starburst is literally just a circle
+		Did a search for finding points on a circle and ChatGPT answered me with the formula
+		x = cx + r * cos(a) and y = cy + r * sin(a)
+		where cx/cy are the origin points, a is the angle, r is the radius of the circle
+	*/
+
+	int angleBetween = 360 / linesToDraw;
+	for (int l = 0; l < linesToDraw; l++) {
+		int deg = angleBetween * l;
+		float newX = midX + radius * cos((deg * M_PI) / 180);
+		float newY = midY + radius * sin((deg * M_PI) / 180);
+
+		bresenham(midX, midY, newX, newY, *line.image, Line::color.white);
+	}
+
+	// now continue the above until you get to 90 deg
+
+	line.image->flip_vertically();
+	line.image->write_tga_file("outputStarburst.tga");
 }
 
 void Line::drawWireframe(Model *model, std::string wireFrameName, std::string method) {
