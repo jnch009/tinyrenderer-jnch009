@@ -24,7 +24,6 @@ Some sample renders so far:
 ---
 
 # Learnings:
-## Triangle Rasterization
 1. When integrating triangle rendering using barycentric coordinates, my initial attempt of creating a bounding box was by
 using the entire canvas for points to check. Now if we're simply providing one triangle into the `barycentricPolygonRenderer` function
 this is not too big of a deal since we only do one pass, but direct your attention to lines 98-107 in `main.cpp`. Notice that we iterate
@@ -38,6 +37,8 @@ to check if they exist inside the triangle. The difference with the strategy her
 every time, we're only scanning a condensed region of pixels using the vertices. This would improve the worst case time complexity to O(n^2), where
 the worst case would be the entire grid filled with triangles.
 
+<hr/>
+
 2. For scanline rendering <TODO continue to add to this>
     
     // Can we have two separate loops storing the unique points and then use the other loop to find the y coordinates that match
@@ -45,6 +46,8 @@ the worst case would be the entire grid filled with triangles.
 	// The line with the steeper slope will obviously hit the limit faster
 
 	// we don't need to find the steeper slope, in the line function above, I simply take all Vec2i where the y values are unique
+
+<hr/>
 
 3. For using barycentric coordinates to render triangles, one issue that was annoying me was
 gaps appearing in the lighting render. I was not seeing the same issue occurring with scanline rendering and was puzzled. Turns out the problem was that because lines of a triangle might not always pass through each pixel exactly, you may end up with unlit pixels due to the fact that the barycentric coordinate is out of the range [0,1]. 
@@ -65,7 +68,28 @@ gaps appearing in the lighting render. I was not seeing the same issue occurring
    | ------------- | ------------- |
    | <img src=".vs/Screenshot Scanline triangle.png" width="380"> | <img src=".vs/Screenshot Scanline flat shading.png" width="400"> |
 
-   # Correction to #3
-   The margin of error strategy does in fact mitigate the problem, it unfortunately violates the actual use case of barycentric coordinates. Namely, barycentric coordinates represent the location of a point inside of a simplex where the 3 coordinates are within the range [0,1] should they exist in the triangle. If any of the coordinates are found outside of the range, then it is NOT inside the triangle and therefore the pixel should not be lit. After doing a bit more research, I found this article https://www.scratchapixel.com/lessons/3d-basic-rendering/ray-tracing-rendering-a-triangle/barycentric-coordinates.html which helped clarify the usage of using cross and dot products to solve the problem. Taking the cross product of two edges or the cross product of one edge with a line to our point would give us a normal vector. If we take the dot product of these two vectors, we may get a negative value. A negative dot product means that the vectors are pointing in opposite directions. What makes this really useful in our case is that we can conclude that the point does not exist on the triangle and therefore we don't draw a pixel.
+   ### Correction to #3
+   The margin of error strategy does in fact mitigate the problem, it unfortunately violates the actual use case of barycentric coordinates. Namely, barycentric coordinates represent the location of a point inside of a simplex and if the 3 coordinates are within the range [0,1] then the point exists in the triangle. If any of the coordinates are found outside of the range, then it is NOT inside the triangle and therefore the pixel should not be lit. After doing a bit more research, I found this article https://www.scratchapixel.com/lessons/3d-basic-rendering/ray-tracing-rendering-a-triangle/barycentric-coordinates.html which helped clarify the usage of using cross and dot products to solve the problem. Taking the cross product of two edges or the cross product of one edge with a line to our point would give us the normal vector. If we take the dot product of these two vectors, we may get a negative value. A negative dot product means that the vectors are pointing in opposite directions. We can therefore conclude that the point does not exist on the triangle and therefore we don't draw a pixel.
 
    <img src=".vs/Barycentric using cross and dot products.png" width="380">
+
+<hr/>
+
+4. Interesting case study of Anti Aliasing. I've been concurrently going through a book called "Practical Shader Development" and learned about a concept called additive blending. The way it works is by combining colors of textures (need to check) in a scene to get a brighter effect. I had noticed that my Anti-Aliased algorithm looked a bit off where the colors of the starburst looked a bit off. 
+
+    <img src=".vs/Xiaolin AA looks off.png" width="380">
+
+    If you look carefully in the middle, you'll see that the AA effect looks a bit inconsistent from the horizontal line on the right. In the middle, another thing that was bothering me was the reduced brightness. I am attempting to replicate the effect from a past university course I took at Simon Fraser University. 
+
+    <img src=".vs/AA from University.png" width="380">
+
+    With the addition of additive blending, I think I have managed to resolve the issue to the best of my ability and the end result looks fairly close. The image from the university utilizes a different Anti-Aliasing algorithm however.
+
+    <img src=".vs/Additive Blending attempt 1.png" width="380">
+
+    UPDATE: The reason for the black spots in the middle is that `unsigned chars` do not get clamped by default. If you go past a certain value, then the `unsigned char` will get changed to an unintended value. I needed to clamp the values within [0,255]. Now the picture looks almost the same (slightly brighter in the middle).
+
+    | University AntiAliasing | My attempt |
+    | ------------- | ------------- |
+    | <img src=".vs/AA from University.png" width="380"> | <img src=".vs/Additive Blending attempt 2.png" width="380"> |
+    

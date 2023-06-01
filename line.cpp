@@ -134,7 +134,7 @@ void Line::xiaolinAntiAliasing(int x0, int y0, int x1, int y1, TGAImage &image, 
 		double wholeX = floor(x);
 		
 		// this means we have a decimal part and verifying the y-axis
-		if ((x_inc == 1 || x_inc == -1) && y - wholeY != wholeY) {
+		if ((x_inc == 1 || x_inc == -1)) {
 			// 1 - (y - wholeY) gives us the distance between the upper pixel and our point
 			// (y - wholeY) gives us the distance between the bottom pixel and our point
 
@@ -146,32 +146,55 @@ void Line::xiaolinAntiAliasing(int x0, int y0, int x1, int y1, TGAImage &image, 
 			double bottomIntensity = 1 - (y - wholeY);
 
 			// TODO: this can be extracted out into a new function
-			TGAColor topColor = TGAColor(color.r* topIntensity, color.g* topIntensity, color.b* topIntensity, color.a);
-			TGAColor bottomColor = TGAColor(color.r * bottomIntensity, color.g * bottomIntensity, color.b * bottomIntensity, color.a);
-
+			TGAColor topColor = color * topIntensity;
+			TGAColor bottomColor = color * bottomIntensity;
 
 			// TODO: we should be able to extract this out as well
 			if (y - wholeY >= 0.5) { // means rounding gives us the top pixel
-				image.set(x, round(y), topColor);
-				image.set(x, round(y) - 1, bottomColor);
+
+				// TODO: add operator to tgaimage.h
+				// TODO: I did not realize that if you go past 255, then the value automatically clamps to 144 and NOT 255 which is probably the issue we're seeing
+				// We need to clamp to 255!!!
+				// Find out a BETTER way than I'm doing right now
+
+				TGAColor addingTopPixel = image.get(x, round(y)) + topColor;
+				TGAColor addingBottomPixel = image.get(x, round(y)-1) + bottomColor;
+
+				image.set(x, round(y), addingTopPixel);
+				image.set(x, round(y) - 1, addingBottomPixel);
 			} else { // rounding gives us the bottom pixel
-				image.set(x, round(y) + 1, topColor);
-				image.set(x, round(y), bottomColor);
+				TGAColor addingTopPixel = image.get(x, round(y)+1) + topColor;
+				TGAColor addingBottomPixel = image.get(x, round(y)) + bottomColor;
+
+				image.set(x, round(y) + 1, addingTopPixel);
+				image.set(x, round(y), addingBottomPixel);
 			}
-		} else if ((y_inc == 1 || y_inc == -1) && x - wholeX != wholeX) {
+		} 
+		
+		else if ((y_inc == 1 || y_inc == -1)) {
 			double rightIntensity = x - wholeX;
 			double leftIntensity = 1 - (x - wholeX);
 
-			TGAColor rightColor = TGAColor(color.r* rightIntensity, color.g * rightIntensity, color.b* rightIntensity , color.a);
-			TGAColor leftColor = TGAColor(color.r* leftIntensity, color.g* leftIntensity, color.b * leftIntensity, color.a);
+			TGAColor rightColor = color * rightIntensity;
+			TGAColor leftColor = color * leftIntensity;
 
 			if (x - wholeX >= 0.5) {
-				image.set(round(x), y, rightColor);
-				image.set(round(x) - 1, y, leftColor);
+				TGAColor addingRightPixel = image.get(round(x), y) + rightColor;
+				TGAColor addingLeftPixel = image.get(round(x)-1, y) + leftColor;
+
+				image.set(round(x), y, addingRightPixel);
+				image.set(round(x) - 1, y, addingLeftPixel);
 			} else {
-				image.set(round(x) + 1, y, rightColor);
-				image.set(round(x), y, leftColor);
+				TGAColor addingRightPixel = image.get(round(x)+1, y) + rightColor;
+				TGAColor addingLeftPixel = image.get(round(x), y) + leftColor;
+
+				image.set(round(x) + 1, y, addingRightPixel);
+				image.set(round(x), y, addingLeftPixel);
 			}
+		}
+
+		else {
+			image.set(x, y, color);
 		}
 
 		x += x_inc;
@@ -185,7 +208,7 @@ void Line::drawRandomLines(int w, int h, int lineCount) {
 	for (int i = 0; i < lineCount; i++)
 	{
 		xiaolinAntiAliasing(rand() % line.width, rand() % line.height, rand() % line.width, rand() % line.height, *line.image, Line::color.white);
-		DDA(rand() % line.width, rand() % line.height, rand() % line.width, rand() % line.height, *line.image, Line::color.green);
+		DDA(rand() % line.width, rand() % line.height, rand() % line.width, rand() % line.height, *line.image, Line::color.red);
 		bresenham(rand() % line.width, rand() % line.height, rand() % line.width, rand() % line.height, *line.image, Line::color.blue);
 	}
 
@@ -201,6 +224,7 @@ void Line::drawRandomLines(int w, int h, int lineCount) {
 }
 
 void Line::drawStarburst(int w, int h, int linesToDraw, int radius) {
+	LineImage lineAA(w,h);
 	LineImage line(w,h);
 
 	int midX = w/2;
@@ -219,8 +243,12 @@ void Line::drawStarburst(int w, int h, int linesToDraw, int radius) {
 		float newX = midX + radius * cos((deg * M_PI) / 180);
 		float newY = midY + radius * sin((deg * M_PI) / 180);
 
-		xiaolinAntiAliasing(midX, midY, newX, newY, *line.image, Line::color.white);
+		xiaolinAntiAliasing(midX, midY, newX, newY, *lineAA.image, Line::color.white);
+		bresenham(midX, midY, newX, newY, *line.image, Line::color.white);
 	}
+
+	lineAA.image->flip_vertically();
+	lineAA.image->write_tga_file("outputStarburstAA.tga");
 
 	line.image->flip_vertically();
 	line.image->write_tga_file("outputStarburst.tga");

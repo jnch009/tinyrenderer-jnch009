@@ -20,7 +20,15 @@ struct TGA_Header {
 };
 #pragma pack(pop)
 
+inline int colorAddition(unsigned char col1, unsigned char col2) {
+	int res = (col1 + col2);
+	return res > 255 ? 255 : res;
+}
 
+inline int colorScale(unsigned char col, double c) {
+	int res = col * c;
+	return res > 255 ? 255 : res;
+}
 
 struct TGAColor {
 	union {
@@ -56,6 +64,14 @@ struct TGAColor {
 			val = c.val;
 		}
 		return *this;
+	}
+
+	inline TGAColor operator +(const TGAColor &c) {
+		return TGAColor(colorAddition(r,c.r), colorAddition(g, c.g), colorAddition(b, c.b), colorAddition(a, c.a));
+	}
+
+	inline TGAColor operator *(const double c) {
+		return TGAColor(colorScale(r,c), colorScale(g, c), colorScale(b, c), colorScale(a, c));
 	}
 };
 
