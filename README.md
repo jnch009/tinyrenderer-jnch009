@@ -21,6 +21,18 @@ Some sample renders so far:
 
 ![image](https://github.com/jnch009/tinyrenderer-jnch009/assets/13592249/1fae3683-c7bd-45f8-b779-3fcb5756d730)
 
+## Anti aliasing
+
+<img src=".vs/Additive Blending attempt 2.png" width="380">
+
+## Flat Shading renders
+
+<img src=".vs/Barycentric using cross and dot products.png" width="380">
+
+## Hidden face removal
+
+<img src=".vs/Hidden surface removal.png" width="380">
+
 ---
 
 # Learnings:

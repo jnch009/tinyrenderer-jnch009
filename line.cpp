@@ -348,22 +348,3 @@ void Line::rasterize(Vec2i p1, Vec2i p2, TGAImage &image, TGAColor color, int yb
 	image.flip_vertically();
 	image.write_tga_file("rasterizer.tga");
 }
-
-// 800 x 600 = 480,000
-// x=0,y=0 idx = 0
-// x=25,y=25 idx = 25 + 25*800 = 20,025
-
-// width = # of columns (x)
-// height = # of rows (y)
-// idx = x + y * width
-	// x is the starting point in row major
-	// y * width means how many rows we need to offset
-
-/* Here is the strategy for hidden surface removal
-If you use barycentric coordinates, you can multiply the barycentric coordinates by each vertices' x and y coordinate
-and sum the resulting x-coordinates and y-coordinates
-to find the corresponding point inside the triangle (ie. 0.33,0.33,0.33 means a point at the middle of the triangle).
-Therefore, to find the z-coordinate, we apply the exact the same logic, but multiplying the barycentric coordinate to each vertices' z coordinate!
-Once we find the z-coordinate, it becomes easy. We just compare with the z-buffer and if the z-coordinate > zbuffer value 
-then we replace and set the pixel otherwise ignore.
-*/
