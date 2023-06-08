@@ -208,7 +208,7 @@ void Line::drawRandomLines(int w, int h, int lineCount) {
 	for (int i = 0; i < lineCount; i++)
 	{
 		xiaolinAntiAliasing(rand() % line.width, rand() % line.height, rand() % line.width, rand() % line.height, *line.image, Line::color.white);
-		DDA(rand() % line.width, rand() % line.height, rand() % line.width, rand() % line.height, *line.image, Line::color.red);
+		DDA(rand() % line.width, rand() % line.height, rand() % line.width, rand() % line.height, *line.image, Line::color.yellow);
 		bresenham(rand() % line.width, rand() % line.height, rand() % line.width, rand() % line.height, *line.image, Line::color.blue);
 	}
 

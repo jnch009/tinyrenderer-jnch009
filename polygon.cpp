@@ -148,7 +148,6 @@ void Polygon::barycentricPolygonRenderer(Vec3f vertices[], TGAImage &image, TGAC
 			int idx = x + y*width;
 			if (shouldDrawPixel(vertices, Vec2i(x,y), triangleNormal, area, zbuffer, idx)) {
 				image.set(x, y, color);
-				loggingCalls++;
 			}
 			// TODO: here is where we compare with zbuffer to determine if we show or don't show the pixel
 		}
@@ -330,8 +329,6 @@ void Polygon::drawFlatShadingWithLighting(Model *model, FlatLightingArgs args) {
 			barycentricPolygonRenderer(screen_coords_z, *flatBaryShadingWithLighting.image, TGAColor(intensity*255, intensity*255, intensity*255, 255), zbuffer, width);
     	}
 	}
-
-	std::cout << loggingCalls << std::endl;
 
 	// flatShadingWithLighting.image->flip_vertically();
 	// flatShadingWithLighting.image->write_tga_file("outputFlatShadingLighting.tga");

@@ -9,7 +9,7 @@ Model *model = NULL;
 Color color;
 
 int main(int argc, char** argv) {
-	Line::drawRandomLines();
+	Line::drawRandomLines(500,500, 15);
 	Line::drawRandomLines(2000,1275, 200);
 	Line::drawRandomLines(800,600, 50);
 	Line::drawRandomLines(1024,768, 75);
