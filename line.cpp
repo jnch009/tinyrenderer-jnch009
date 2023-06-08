@@ -291,3 +291,79 @@ void Line::drawWireframe(Model *model, std::string wireFrameName, std::string me
 
 	delete line.image;
 }
+
+void Line::draw2DScene(int w, int h) {
+	LineImage scene(w, h);
+
+	// scene "2d mesh"
+    xiaolinAntiAliasing(20, 34,   744, 400, *scene.image, scene.color.red);
+    xiaolinAntiAliasing(120, 434, 444, 400, *scene.image, scene.color.green);
+    xiaolinAntiAliasing(330, 463, 594, 200, *scene.image, scene.color.blue);
+
+    // screen line
+    xiaolinAntiAliasing(10, 10, 790, 10, *scene.image, scene.color.white);
+
+    scene.image->flip_vertically(); // i want to have the origin at the left bottom corner of the image
+    scene.image->write_tga_file("scene.tga");
+}
+
+void Line::draw1DScene(int w) {
+	TGAImage render(w, 16, TGAImage::RGB);
+    int ybuffer[w];
+    for (int i=0; i<w; i++) {
+        ybuffer[i] = std::numeric_limits<int>::min();
+    }
+    rasterize(Vec2i(20, 150), Vec2i(120, 125), render, Line::color.green, ybuffer);
+    rasterize(Vec2i(120, 125), Vec2i(200, 200), render, Line::color.green, ybuffer);
+    rasterize(Vec2i(20, 150), Vec2i(200, 200), render, Line::color.green, ybuffer);
+
+	rasterize(Vec2i(180, 150), Vec2i(120, 160), render, Line::color.blue, ybuffer);
+	rasterize(Vec2i(120, 160), Vec2i(130, 200), render, Line::color.blue, ybuffer);
+	rasterize(Vec2i(180, 150), Vec2i(130, 200), render, Line::color.blue, ybuffer);
+}
+
+void Line::rasterize(Vec2i p1, Vec2i p2, TGAImage &image, TGAColor color, int ybuffer[]) {
+	// sort by x?
+	// can do that later
+	if (p1.x > p2.x) {
+		std::swap(p1, p2);
+	}
+
+	for (int x = p1.x; x <= p2.x; x++)
+	{
+		// linearly interpolate the values
+		int y = p1.y + (x - p1.x)*((double)(p2.y - p1.y)/(p2.x - p1.x));
+
+		if (ybuffer[x] < y) {
+			ybuffer[x] = y;
+
+			int imageHeight = image.get_height();
+			// image.set(x, 0, color);	
+			for (int i = 0; i < imageHeight; i++) {
+				image.set(x, i, color);	
+			}
+		}
+	}
+
+	image.flip_vertically();
+	image.write_tga_file("rasterizer.tga");
+}
+
+// 800 x 600 = 480,000
+// x=0,y=0 idx = 0
+// x=25,y=25 idx = 25 + 25*800 = 20,025
+
+// width = # of columns (x)
+// height = # of rows (y)
+// idx = x + y * width
+	// x is the starting point in row major
+	// y * width means how many rows we need to offset
+
+/* Here is the strategy for hidden surface removal
+If you use barycentric coordinates, you can multiply the barycentric coordinates by each vertices' x and y coordinate
+and sum the resulting x-coordinates and y-coordinates
+to find the corresponding point inside the triangle (ie. 0.33,0.33,0.33 means a point at the middle of the triangle).
+Therefore, to find the z-coordinate, we apply the exact the same logic, but multiplying the barycentric coordinate to each vertices' z coordinate!
+Once we find the z-coordinate, it becomes easy. We just compare with the z-buffer and if the z-coordinate > zbuffer value 
+then we replace and set the pixel otherwise ignore.
+*/

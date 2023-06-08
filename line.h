@@ -24,6 +24,9 @@ namespace Line {
     void drawRandomLines(int w = BaseImage::width, int h = BaseImage::height, int lineCount = randomLines);
     void drawStarburst(int w = 300, int h = 300, int linesToDraw = 90, int radius = 125);
     void drawWireframe(Model *model, std::string wireFrameName, std::string method = "bresenham");
+    void draw2DScene(int w = BaseImage::width, int h = BaseImage::height);
+    void draw1DScene(int w = BaseImage::width);
+    void rasterize(Vec2i p1, Vec2i p2, TGAImage &image, TGAColor color, int ybuffer[]);
 }
 
 

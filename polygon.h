@@ -38,6 +38,7 @@ namespace Polygon {
     int findYCoordinateLimit(std::vector<Vec2i> &pts1, std::vector<Vec2i> &pts2, int pts1Size, int pts2Size);
     bool isPointInsideTriangle(Vec2i vertices[], Vec2i point);
     void barycentricPolygonRenderer(Vec2i vertices[], TGAImage &image, TGAColor color);
+    void barycentricPolygonRenderer(Vec3f vertices[], TGAImage &image, TGAColor color);
     void scanline(Vec2i t[], TGAImage &image, TGAColor color, bool useAA = false);
     void sortPolygonByYCoordinates(Vec2i vertices[]);
 

@@ -18,8 +18,8 @@ int main(int argc, char** argv) {
 	std::vector<TProperties> trianglesToRender = {
 		{{Vec2i(50, 160), Vec2i(10, 70), Vec2i(70, 80)}, color.red},
 		{{Vec2i(150, 1),  Vec2i(180, 50), Vec2i(70, 180)}, color.white},
-		{{Vec2i(180, 150), Vec2i(120, 160), Vec2i(130, 180)}, color.blue},
-		{{Vec2i(20, 150), Vec2i(120, 125), Vec2i(130, 180)}, color.green}
+		{{Vec2i(180, 150), Vec2i(120, 160), Vec2i(130, 200)}, color.blue},
+		{{Vec2i(20, 150), Vec2i(120, 125), Vec2i(200, 200)}, color.green}
 	};
 
 	Line::drawStarburst();
@@ -44,5 +44,9 @@ int main(int argc, char** argv) {
 	Polygon::drawFlatShadingWithLighting(model, {.lightDir=Vec3f(0,0,-1)});
 
 	delete model;
+
+	Line::draw2DScene();
+	Line::draw1DScene(200);
+	
 	return 0;
 }
