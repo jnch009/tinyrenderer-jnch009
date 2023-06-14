@@ -304,7 +304,7 @@ void Line::draw2DScene(int w, int h) {
     xiaolinAntiAliasing(10, 10, 790, 10, *scene.image, scene.color.white);
 
     scene.image->flip_vertically(); // i want to have the origin at the left bottom corner of the image
-    scene.image->write_tga_file("scene.tga");
+    scene.image->write_tga_file("output2Dscene.tga");
 }
 
 void Line::draw1DScene(int w) {
@@ -346,5 +346,5 @@ void Line::rasterize(Vec2i p1, Vec2i p2, TGAImage &image, TGAColor color, int yb
 	}
 
 	image.flip_vertically();
-	image.write_tga_file("rasterizer.tga");
+	image.write_tga_file("outputRasterizer.tga");
 }

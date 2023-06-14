@@ -23,35 +23,8 @@ float Polygon::calculateBaryArea(Vec3f subtriangleNrm)
 	return (subtriangleNrm.norm() / 2);
 }
 
-// For now: assuming that the vertices array is length 3
-bool Polygon::isPointInsideTriangle(Vec2i vertices[], Vec2i point, Vec3f triangleNormal, float triangleArea)
+BarycentricCoordinates Polygon::getBarycentricCoordinates(Vec3f vertices[], Vec2i point, float triangleArea)
 {
-	// Now is there a way we can avoid recalculating this over and over?
-	// The triangleNormal/area will always stay the same for one set of vertices
-	// Vec3f verts3D[] = {Vec3f(vertices[0].x, vertices[0].y, 0), Vec3f(vertices[1].x, vertices[1].y, 0), Vec3f(vertices[2].x, vertices[2].y, 0)};
-	// Vec3f triangleNormal = getTriangleNormal(verts3D);
-	// float area = getTriangleArea(triangleNormal);
-
-	// calculating normal vector of subtriangle 1
-	Vec3f subtriangleNrm1 = getSubtriangleNormal(Vec3f(vertices[2].x, vertices[2].y, 0), Vec3f(vertices[1].x, vertices[1].y, 0), Vec3f(point.x, point.y, 0));
-	// calculating normal vector of subtriangle 2
-	Vec3f subtriangleNrm2 = getSubtriangleNormal(Vec3f(vertices[0].x, vertices[0].y, 0), Vec3f(vertices[2].x, vertices[2].y, 0), Vec3f(point.x, point.y, 0));
-	// calculating normal vector of subtriangle 3
-	Vec3f subtriangleNrm3 = getSubtriangleNormal(Vec3f(vertices[1].x, vertices[1].y, 0), Vec3f(vertices[0].x, vertices[0].y, 0), Vec3f(point.x, point.y, 0));
-	// if (!(triangleNormal*subtriangleNrm1 < 0 || triangleNormal*subtriangleNrm2 < 0 || triangleNormal*subtriangleNrm3 < 0)) {
-	// 	std::cout << vertices[0] << vertices[1] << vertices[2] << point << std::endl;
-	// 	std::cout << u << " " << v << " " << w << std::endl;
-	// 	std::cout << (float)vertices[0].x*u + (float)vertices[1].x*v + (float)vertices[2].x*w << " " << vertices[0].y*u + vertices[1].y*v + vertices[2].y*w << std::endl;
-	// 	std::cout << "----------------------------------------" << std::endl;
-	// }
-
-	/* We can imagine u_Nrm, v_Nrm and w_Nrm as the normal vectors of subtriangles of P
-	If P exists in the triangle then each subtriangle would have their vectors facing the same direction as the main triangle. 
-	Otherwise, one of the subtriangles is outside since it is pointing the opposite direction and therefore it doesn't exist inside. */
-	return triangleNormal*subtriangleNrm1 < 0 || triangleNormal*subtriangleNrm2 < 0 || triangleNormal*subtriangleNrm3 < 0 ? false : true;
-}
-
-bool Polygon::shouldDrawPixel(Vec3f vertices[], Vec2i point, Vec3f triangleNormal, float triangleArea, int *zbuffer, int idx) {
 	Vec3f subtriangleNrm1 = getSubtriangleNormal(Vec3f(vertices[2].x, vertices[2].y, 0), Vec3f(vertices[1].x, vertices[1].y, 0), Vec3f(point.x, point.y, 0));
 	float u = calculateBaryArea(subtriangleNrm1) / triangleArea;
 
@@ -63,9 +36,29 @@ bool Polygon::shouldDrawPixel(Vec3f vertices[], Vec2i point, Vec3f triangleNorma
 	Vec3f subtriangleNrm3 = getSubtriangleNormal(Vec3f(vertices[1].x, vertices[1].y, 0), Vec3f(vertices[0].x, vertices[0].y, 0), Vec3f(point.x, point.y, 0));
 	float w = calculateBaryArea(subtriangleNrm3) / triangleArea;
 
-	int zCoord = u*vertices[0].z + v*vertices[1].z + w*vertices[2].z;
+	return BarycentricCoordinates{u,v,w};
+}
 
-	if (triangleNormal*subtriangleNrm1 < 0 || triangleNormal*subtriangleNrm2 < 0 || triangleNormal*subtriangleNrm3 < 0) return false;
+// For now: assuming that the vertices array is length 3
+bool Polygon::isPointInsideTriangle(Vec3f vertices[], Vec2i point, Vec3f triangleNormal, float triangleArea)
+{
+	// calculating normal vector of subtriangle 1
+	Vec3f subtriangleNrm1 = getSubtriangleNormal(Vec3f(vertices[2].x, vertices[2].y, vertices[2].z), Vec3f(vertices[1].x, vertices[1].y, vertices[1].z), Vec3f(point.x, point.y, 0));
+	// calculating normal vector of subtriangle 2
+	Vec3f subtriangleNrm2 = getSubtriangleNormal(Vec3f(vertices[0].x, vertices[0].y, vertices[0].z), Vec3f(vertices[2].x, vertices[2].y, vertices[2].z), Vec3f(point.x, point.y, 0));
+	// calculating normal vector of subtriangle 3
+	Vec3f subtriangleNrm3 = getSubtriangleNormal(Vec3f(vertices[1].x, vertices[1].y, vertices[1].z), Vec3f(vertices[0].x, vertices[0].y, vertices[0].z), Vec3f(point.x, point.y, 0));
+
+	/* We can imagine u_Nrm, v_Nrm and w_Nrm as the normal vectors of subtriangles of P
+	If P exists in the triangle then each subtriangle would have their vectors facing the same direction as the main triangle. 
+	Otherwise, one of the subtriangles is outside since it is pointing the opposite direction and therefore it doesn't exist inside. */
+	return triangleNormal*subtriangleNrm1 < 0 || triangleNormal*subtriangleNrm2 < 0 || triangleNormal*subtriangleNrm3 < 0 ? false : true;
+}
+
+bool Polygon::shouldDrawPixel(Vec3f vertices[], Vec2i point, BarycentricCoordinates bary, Vec3f triangleNormal, float triangleArea, int *zbuffer, int idx) {
+	int zCoord = bary.u*vertices[0].z + bary.v*vertices[1].z + bary.w*vertices[2].z;
+
+	if (!isPointInsideTriangle(vertices, point, triangleNormal, triangleArea)) return false;
 
 	if (zCoord > zbuffer[idx])
 	{
@@ -101,7 +94,7 @@ void Polygon::barycentricPolygonRenderer(Vec2i vertices[], TGAImage &image, TGAC
 	{
 		for (int y = bbox.smallestY; y <= (bbox.smallestY + bbox.maxHeight); y++)
 		{
-			if (isPointInsideTriangle(vertices, Vec2i(x, y), triangleNormal, area) == true)
+			if (isPointInsideTriangle(verts3D, Vec2i(x, y), triangleNormal, area) == true)
 			{
 				image.set(x,y,color);
 			}
@@ -145,11 +138,34 @@ void Polygon::barycentricPolygonRenderer(Vec3f vertices[], TGAImage &image, TGAC
 	{
 		for (int y = bbox.smallestY; y <= (bbox.smallestY + bbox.maxHeight); y++)
 		{
+			BarycentricCoordinates bary = getBarycentricCoordinates(vertices, Vec2i(x,y), area);
 			int idx = x + y*width;
-			if (shouldDrawPixel(vertices, Vec2i(x,y), triangleNormal, area, zbuffer, idx)) {
+			if (shouldDrawPixel(vertices, Vec2i(x,y), bary, triangleNormal, area, zbuffer, idx)) {
 				image.set(x, y, color);
 			}
-			// TODO: here is where we compare with zbuffer to determine if we show or don't show the pixel
+		}
+	}
+}
+
+void Polygon::texturedPolygonRenderer(Vec3f vertices[], TGAImage &image, TGAImage diffuseTexture, Vec3f textCoords[], int *zbuffer, int width, float intensity) {
+	Vec2i bboxCoords[] = {Vec2i(vertices[0].x, vertices[0].y), Vec2i(vertices[1].x, vertices[1].y), Vec2i(vertices[2].x, vertices[2].y)};
+	BoundingBox bbox = findBoundingBox(bboxCoords);
+
+	Vec3f verts3D[] = {Vec3f(vertices[0].x, vertices[0].y, 0), Vec3f(vertices[1].x, vertices[1].y, 0), Vec3f(vertices[2].x, vertices[2].y, 0)};
+	Vec3f triangleNormal = getTriangleNormal(verts3D);
+	float area = getTriangleArea(triangleNormal);
+	for (int x = bbox.smallestX; x <= (bbox.smallestX + bbox.maxWidth); x++)
+	{
+		for (int y = bbox.smallestY; y <= (bbox.smallestY + bbox.maxHeight); y++)
+		{
+			BarycentricCoordinates bary = getBarycentricCoordinates(vertices, Vec2i(x,y), area);
+			int idx = x + y*width;
+			if (shouldDrawPixel(vertices, Vec2i(x,y), bary, triangleNormal, area, zbuffer, idx)) {
+				int textureX = (bary.u*textCoords[0].x + bary.v*textCoords[1].x + bary.w*textCoords[2].x) * diffuseTexture.get_width();
+				int textureY = (bary.u*textCoords[0].y + bary.v*textCoords[1].y + bary.w*textCoords[2].y) * diffuseTexture.get_height();
+				TGAColor textureColor = diffuseTexture.get(textureX, textureY);
+				image.set(x, y, textureColor);
+			}
 		}
 	}
 }
@@ -178,7 +194,6 @@ void Polygon::sortPolygonByYCoordinates(Vec2i vertices[])
     }
 }
 
-// TODO: add some comments for your thought process then add it to the README
 void Polygon::scanline(Vec2i t[], TGAImage &image, TGAColor color, bool useAA) {
 	/* The idea to use vectors is to keep track of all points
 	to be drawn on the lines so that we'd be able to draw a horizontal line between the points */
@@ -276,9 +291,11 @@ void Polygon::drawFlatShadingRandom(Model *model, FlatShadingArgs args) {
 	for (int i=0; i<model->nfaces(); i++) {
     	std::vector<int> face = model->face(i);
     	Vec2i screen_coords[3];
-    	for (int j=0; j<3; j++) {
-        	Vec3f world_coords = model->vert(face[j]); 
-        	screen_coords[j] = Vec2i((world_coords.x+1.)*args.width/2., (world_coords.y+1.)*args.height/2.); 
+		int idx = 0;
+    	for (int j=0; j <= 4; j+=2) {
+        	Vec3f world_coords = model->vert(face[j]);
+        	screen_coords[idx] = Vec2i((world_coords.x+1.)*args.width/2., (world_coords.y+1.)*args.height/2.);
+			idx++;
     	} 
     	barycentricPolygonRenderer(screen_coords, *flatShadingRandomBary.image, TGAColor(rand()%255, rand()%255, rand()%255, 255)); 
 		// scanline(screen_coords, *flatShadingRandomScanline.image, TGAColor(rand()%255, rand()%255, rand()%255, 255));
@@ -294,48 +311,73 @@ void Polygon::drawFlatShadingRandom(Model *model, FlatShadingArgs args) {
 	// delete flatShadingRandomScanline.image;
 }
 
-// Uncomment out the scanline code if needed
-// Will use barycentric for the time being
-void Polygon::drawFlatShadingWithLighting(Model *model, FlatLightingArgs args) {
-	// Polygon flatShadingWithLighting;
-	Polygon flatBaryShadingWithLighting;
-
-	int width = flatBaryShadingWithLighting.width;
-	int height = flatBaryShadingWithLighting.height;
-
-	int *zbuffer = new int[width*height];
+void Polygon::generateZBuffer(int zbuffer[], int width, int height) {
 	for (int i=0; i<width*height; i++) {
         zbuffer[i] = std::numeric_limits<int>::min();
     }
+}
+
+// Uncomment out the scanline code if needed
+// Will use barycentric for the time being
+void Polygon::drawFlatShadingWithLighting(Model *model, FlatLightingArgs args) {
+	Polygon flatBaryShading;
+	Polygon flatBaryShadingWithHSR;
+	Polygon flatBaryShadingWithTextures;
+
+	TGAImage diffuseTexture;
+	diffuseTexture.read_tga_file("obj/african_head_diffuse.tga");
+	diffuseTexture.flip_vertically();
+
+	int width = flatBaryShadingWithHSR.width;
+	int height = flatBaryShadingWithHSR.height;
+
+	int *zbuffer = new int[width*height];
+	int *texturedZBuffer = new int[width*height];
+	generateZBuffer(zbuffer, width, height);
+	generateZBuffer(texturedZBuffer, width, height);
 
 	for (int i=0; i<model->nfaces(); i++) {
-    	std::vector<int> face = model->face(i); 
-    	Vec2i screen_coords[3]; 
+    	std::vector<int> face = model->face(i);
+    	Vec2i screen_coords[3];
 		Vec3f screen_coords_z[3];
-    	Vec3f world_coords[3]; 
-    	for (int j=0; j<3; j++) { 
-        	Vec3f v = model->vert(face[j]); 
-        	screen_coords[j] = Vec2i((v.x+1.)*args.width/2., (v.y+1.)*args.height/2.);
-			screen_coords_z[j] = Vec3f((v.x+1.)*args.width/2., (v.y+1.)*args.height/2., v.z);
-        	world_coords[j]  = v; 
+    	Vec3f world_coords[3];
+		Vec3f texture_coords[3];
+    	int idx = 0;
+		for (int j=0; j <= 4; j+=2) { 
+        	Vec3f v = model->vert(face[j]);
+        	screen_coords[idx] = Vec2i((v.x+1.)*args.width/2., (v.y+1.)*args.height/2.);
+			screen_coords_z[idx] = Vec3f((v.x+1.)*args.width/2., (v.y+1.)*args.height/2., v.z);
+        	world_coords[idx] = v;
+			idx++;
     	} 
+
+		idx = 0;
+		for (int k = 1; k <= 5; k += 2) {
+			Vec3f vt = model->text(face[k]);
+			texture_coords[idx] = Vec3f(vt.x, vt.y, 0);
+			idx++;
+		}
+
     	Vec3f n = (world_coords[2]-world_coords[0])^(world_coords[1]-world_coords[0]); 
     	n.normalize(); 
     	float intensity = n*args.lightDir;
     	if (intensity>0) { 
-			// std::cout << screen_coords_z[0] << screen_coords_z[1] << screen_coords_z[2] << std::endl;
 	        // scanline(screen_coords, *flatShadingWithLighting.image, TGAColor(intensity*255, intensity*255, intensity*255, 255));
-			// barycentricPolygonRenderer(screen_coords, *flatBaryShadingWithLighting.image, TGAColor(intensity*255, intensity*255, intensity*255, 255));
-			barycentricPolygonRenderer(screen_coords_z, *flatBaryShadingWithLighting.image, TGAColor(intensity*255, intensity*255, intensity*255, 255), zbuffer, width);
+			barycentricPolygonRenderer(screen_coords, *flatBaryShading.image, TGAColor(intensity*255, intensity*255, intensity*255, 255));			
+			barycentricPolygonRenderer(screen_coords_z, *flatBaryShadingWithHSR.image, TGAColor(intensity*255, intensity*255, intensity*255, 255), zbuffer, width);
+			texturedPolygonRenderer(screen_coords_z, *flatBaryShadingWithTextures.image, diffuseTexture, texture_coords, texturedZBuffer, width, intensity);
     	}
 	}
 
-	// flatShadingWithLighting.image->flip_vertically();
-	// flatShadingWithLighting.image->write_tga_file("outputFlatShadingLighting.tga");
+	flatBaryShading.image->flip_vertically();
+	flatBaryShading.image->write_tga_file("outputFlatBaryShading.tga");
 
-	flatBaryShadingWithLighting.image->flip_vertically();
-	flatBaryShadingWithLighting.image->write_tga_file("outputFlatBaryShadingLighting.tga");
+	flatBaryShadingWithHSR.image->flip_vertically();
+	flatBaryShadingWithHSR.image->write_tga_file("outputFlatBaryShadingHSR.tga");
 
-	// delete flatShadingWithLighting.image;
-	delete flatBaryShadingWithLighting.image;
+	flatBaryShadingWithTextures.image->flip_vertically();
+	flatBaryShadingWithTextures.image->write_tga_file("outputFlatBaryShadingTextures.tga");
+
+	delete flatBaryShading.image;
+	delete flatBaryShadingWithHSR.image;
 }

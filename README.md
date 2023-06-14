@@ -27,9 +27,9 @@ Some sample renders so far:
 
 ## Flat Shading renders
 
-| Barycentric without hidden face removal | Barycentric with hidden face removal | 
-| ------------- | ------------- |
-|<img src=".vs/Barycentric using cross and dot products.png" width="260"> | <img src=".vs/Hidden surface removal.png" width="380"> |
+| Barycentric without hidden face removal | Barycentric with hidden face removal | With Textures |
+| ------------- | ------------- | ------------- |
+|<img src=".vs/Barycentric using cross and dot products.png" width="260"> | <img src=".vs/Hidden surface removal.png" width="330"> | <img src=".vs/Interpolated Textures.png" width="380">  |
 
 ---
 

@@ -24,8 +24,8 @@ int main(int argc, char** argv) {
 
 	Line::drawStarburst();
 	// Designated Initializers (C++20)
-	// Polygon::drawTriangle({BaseArgs { .width = 200, .height = 200 }, .t = trianglesToRender});
-	// Polygon::drawTriangle({BaseArgs { .width = 200, .height = 200,}, .t = trianglesToRender, .useBary = true});
+	Polygon::drawTriangle({BaseArgs { .width = 200, .height = 200 }, .t = trianglesToRender});
+	Polygon::drawTriangle({BaseArgs { .width = 200, .height = 200,}, .t = trianglesToRender, .useBary = true});
 
 	// argc is the argument count
 	// argv is the argument vector
@@ -38,15 +38,15 @@ int main(int argc, char** argv) {
         model = new Model("obj/african_head.obj");
     }
 
-	Line::drawWireframe(model, "outputWireframe");
-	Line::drawWireframe(model, "outputWireframeAA", "aa");
-	// Polygon::drawFlatShadingRandom(model);
+	// Line::drawWireframe(model, "outputWireframe");
+	// Line::drawWireframe(model, "outputWireframeAA", "aa");
+	Polygon::drawFlatShadingRandom(model);
 	Polygon::drawFlatShadingWithLighting(model, {.lightDir=Vec3f(0,0,-1)});
 
 	delete model;
 
-	// Line::draw2DScene();
-	// Line::draw1DScene(200);
+	Line::draw2DScene();
+	Line::draw1DScene(200);
 	
 	return 0;
 }

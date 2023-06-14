@@ -37,6 +37,12 @@ struct BoundingBox {
     int maxHeight;
 };
 
+struct BarycentricCoordinates {
+    float u;
+    float v;
+    float w;
+};
+
 namespace Polygon {
     class Polygon : public BaseImage::Image {
         using Image::Image;
@@ -47,11 +53,14 @@ namespace Polygon {
     float getTriangleArea(Vec3f triangleNormal);
     Vec3f getSubtriangleNormal(Vec3f v0, Vec3f v1, Vec3f point);
     float calculateBaryArea(Vec3f subtriangleNrm);
-    
-    bool isPointInsideTriangle(Vec2i vertices[], Vec2i point, Vec3f triangleNormal, float triangleArea);
-    bool shouldDrawPixel(Vec3f vertices[], Vec2i point, Vec3f triangleNormal, float triangleArea, int *zbuffer, int idx);
+    BarycentricCoordinates getBarycentricCoordinates(Vec3f vertices[], Vec2i point, float triangleArea);
+    void generateZBuffer(int zbuffer[], int width, int height);
+
+    bool isPointInsideTriangle(Vec3f vertices[], Vec2i point, Vec3f triangleNormal, float triangleArea);
+    bool shouldDrawPixel(Vec3f vertices[], Vec2i point, BarycentricCoordinates bary, Vec3f triangleNormal, float triangleArea, int *zbuffer, int idx);
     void barycentricPolygonRenderer(Vec2i vertices[], TGAImage &image, TGAColor color);
     void barycentricPolygonRenderer(Vec3f vertices[], TGAImage &image, TGAColor color, int *zbuffer, int width);
+    void texturedPolygonRenderer(Vec3f vertices[], TGAImage &image, TGAImage diffuseTexture, Vec3f textCoords[], int *zbuffer, int width, float intensity);
     void scanline(Vec2i t[], TGAImage &image, TGAColor color, bool useAA = false);
     void sortPolygonByYCoordinates(Vec2i vertices[]);
 

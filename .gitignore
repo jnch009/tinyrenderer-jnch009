@@ -1,3 +1,5 @@
 main
 *.o
 *.tga
+*.tga:Zone.Identifier
+!obj/*.tga
