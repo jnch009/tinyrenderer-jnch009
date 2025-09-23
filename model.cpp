@@ -18,7 +18,6 @@ Model::Model(const char *filename) : verts_(), faces_(), texts_() {
     // while (!in.eof()) { 
     
     while (std::getline(in, line)) {
-        std::getline(in, line);
         std::istringstream iss(line.c_str());
         char trash;
         if (!line.compare(0, 2, "v ")) {

@@ -35,11 +35,11 @@ int main(int argc, char** argv) {
 	if (2==argc) {
         model = new Model(argv[1]);
     } else {
-        model = new Model("obj/diablo3_pose.obj");
+        model = new Model("obj/african_head.obj");
     }
 
-	Line::drawWireframe(model, "outputWireframe", "AA", Line::color.red);
-	// Line::drawWireframe(model, "outputWireframeAA", "aa");
+	// Line::drawWireframe(model, "outputWireframe", "AA", Line::color.red);
+	Line::drawWireframe(model, "outputWireframeAA", "aa");
 	// Polygon::drawFlatShadingRandom(model);
 	// Polygon::drawFlatShadingWithLighting(model, {.lightDir=Vec3f(0,0,-1)});
 
