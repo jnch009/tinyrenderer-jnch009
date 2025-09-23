@@ -7,10 +7,17 @@
 
 Model::Model(const char *filename) : verts_(), faces_(), texts_() {
     std::ifstream in;
-    in.open (filename, std::ifstream::in);
+    std::string fullPath = std::string(PROJECT_ROOT_PATH) + filename;
+    in.open (fullPath, std::ifstream::in);
+    
     if (in.fail()) return;
+    
     std::string line;
-    while (!in.eof()) {
+
+    // this one is buggy
+    // while (!in.eof()) { 
+    
+    while (std::getline(in, line)) {
         std::getline(in, line);
         std::istringstream iss(line.c_str());
         char trash;

@@ -3,6 +3,7 @@
 #include "line.h"
 #include "color.h"
 #include "geometry.h"
+#include <string>
 
 Vec3f Polygon::getTriangleNormal(Vec3f vertices[])
 {

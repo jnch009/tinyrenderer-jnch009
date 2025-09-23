@@ -1,6 +1,8 @@
+#define _USE_MATH_DEFINES
 #include <iostream>
 #include "line.h"
 #include <cmath>
+#include <string>
 
 void Line::addPtsToVector(std::vector<Vec2i> &pts, double newX, double newY)
 {
@@ -254,7 +256,7 @@ void Line::drawStarburst(int w, int h, int linesToDraw, int radius) {
 	line.image->write_tga_file("outputStarburst.tga");
 }
 
-void Line::drawWireframe(Model *model, std::string wireFrameName, std::string method) {
+void Line::drawWireframe(Model *model, std::string wireFrameName, std::string method, TGAColor lineColor) {
 	if (wireFrameName.length() == 0) {
 		throw std::invalid_argument("fileName required");
 	}
@@ -272,15 +274,22 @@ void Line::drawWireframe(Model *model, std::string wireFrameName, std::string me
 
     for (int i=0; i<model->nfaces(); i++) {
         std::vector<int> face = model->face(i);
+		std::vector<int> verts = {};
+
+		for (int f = 0; f < face.size(); f += 2) {
+    		verts.push_back(face[f]);
+		}
+
         for (int j=0; j<3; j++) {
-            Vec3f v0 = model->vert(face[j]);
-            Vec3f v1 = model->vert(face[(j+1)%3]);
+			// the bug is here, we aren't selecting the vertices after the first one
+            Vec3f v0 = model->vert(verts[j]);
+            Vec3f v1 = model->vert(verts[(j+1)%3]);
             int x0 = (v0.x+1.)*line.width/2.;
             int y0 = (v0.y+1.)*line.height/2.;
             int x1 = (v1.x+1.)*line.width/2.;
             int y1 = (v1.y+1.)*line.height/2.;
 
-            lineDrawingMechanism(x0, y0, x1, y1, *line.image, Line::color.white);
+            lineDrawingMechanism(x0, y0, x1, y1, *line.image, lineColor);
         }
     }
 
@@ -307,20 +316,20 @@ void Line::draw2DScene(int w, int h) {
     scene.image->write_tga_file("output2Dscene.tga");
 }
 
-void Line::draw1DScene(int w) {
-	TGAImage render(w, 16, TGAImage::RGB);
-    int ybuffer[w];
-    for (int i=0; i<w; i++) {
-        ybuffer[i] = std::numeric_limits<int>::min();
-    }
-    rasterize(Vec2i(20, 150), Vec2i(120, 125), render, Line::color.green, ybuffer);
-    rasterize(Vec2i(120, 125), Vec2i(200, 200), render, Line::color.green, ybuffer);
-    rasterize(Vec2i(20, 150), Vec2i(200, 200), render, Line::color.green, ybuffer);
+// void Line::draw1DScene(int w) {
+// 	TGAImage render(w, 16, TGAImage::RGB);
+//     int ybuffer[w];
+//     for (int i=0; i<w; i++) {
+//         ybuffer[i] = std::numeric_limits<int>::min();
+//     }
+//     rasterize(Vec2i(20, 150), Vec2i(120, 125), render, Line::color.green, ybuffer);
+//     rasterize(Vec2i(120, 125), Vec2i(200, 200), render, Line::color.green, ybuffer);
+//     rasterize(Vec2i(20, 150), Vec2i(200, 200), render, Line::color.green, ybuffer);
 
-	rasterize(Vec2i(180, 150), Vec2i(120, 160), render, Line::color.blue, ybuffer);
-	rasterize(Vec2i(120, 160), Vec2i(130, 200), render, Line::color.blue, ybuffer);
-	rasterize(Vec2i(180, 150), Vec2i(130, 200), render, Line::color.blue, ybuffer);
-}
+// 	rasterize(Vec2i(180, 150), Vec2i(120, 160), render, Line::color.blue, ybuffer);
+// 	rasterize(Vec2i(120, 160), Vec2i(130, 200), render, Line::color.blue, ybuffer);
+// 	rasterize(Vec2i(180, 150), Vec2i(130, 200), render, Line::color.blue, ybuffer);
+// }
 
 void Line::rasterize(Vec2i p1, Vec2i p2, TGAImage &image, TGAColor color, int ybuffer[]) {
 	// sort by x?
